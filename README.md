@@ -4,7 +4,7 @@
 
 ## 在线使用
 
-[打开 NEON//NOISE](https://arrow36.github.io/neon-noise/)
+打开 NEON//NOISE https://arrow36.github.io/neon-noise/
 
 首次使用时，请允许浏览器访问麦克风。建议使用最新版 Chrome 或 Edge；部分内置浏览器可能不会开放麦克风接口。
 
