@@ -349,7 +349,120 @@
     canvas { display: block; width: 100%; touch-action: pan-y; }
     #spectrum { height: 420px; cursor: crosshair; }
     #waterfall { height: 364px; cursor: crosshair; }
-    #sharedAxis { height: 58px; }
+    #sharedAxis { display: block; width: 100%; height: 58px; }
+
+    .chart-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .chart-overlay text,
+    #sharedAxis text {
+      font-family: Consolas, "Microsoft YaHei", monospace;
+      text-rendering: geometricPrecision;
+    }
+
+    .overlay-axis-label {
+      fill: rgba(222, 214, 234, .9);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .overlay-time-label {
+      fill: rgba(255, 255, 255, .88);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .overlay-line {
+      fill: none;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .peak-frequency,
+    .measurement-frequency {
+      font-size: 19px;
+      font-weight: 900;
+      paint-order: stroke fill;
+      stroke: rgba(3, 1, 12, .98);
+      stroke-width: 2.5px;
+      stroke-linejoin: round;
+    }
+
+    .peak-level,
+    .measurement-level {
+      fill: rgba(247, 239, 255, .96);
+      font-size: 14px;
+      font-weight: 800;
+      paint-order: stroke fill;
+      stroke: rgba(3, 1, 12, .98);
+      stroke-width: 2px;
+      stroke-linejoin: round;
+    }
+
+    .peak-detail {
+      font-size: 11px;
+      font-weight: 800;
+      paint-order: stroke fill;
+      stroke: rgba(3, 1, 12, .98);
+      stroke-width: 1.75px;
+      stroke-linejoin: round;
+    }
+
+    .chart-overlay.compact .peak-frequency,
+    .chart-overlay.compact .measurement-frequency { font-size: 15px; }
+    .chart-overlay.compact .peak-level,
+    .chart-overlay.compact .measurement-level { font-size: 12px; }
+    .chart-overlay.compact .peak-detail { font-size: 10px; }
+
+    .shared-axis-line,
+    .shared-axis-tick {
+      vector-effect: non-scaling-stroke;
+    }
+
+    .shared-axis-label {
+      fill: rgba(214, 205, 228, .84);
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .shared-axis-label.major {
+      fill: rgba(247, 242, 255, .98);
+      font-weight: 900;
+    }
+
+    .shared-axis-caption,
+    .shared-axis-unit {
+      fill: rgba(77, 246, 255, .72);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .14em;
+    }
+
+    .shared-axis-unit {
+      fill: rgba(255, 225, 111, .88);
+      letter-spacing: .08em;
+    }
+
+    .shared-axis-custom {
+      fill: #ffe16f;
+      font-size: 12px;
+      font-weight: 900;
+      paint-order: stroke fill;
+      stroke: rgba(3, 1, 12, .98);
+      stroke-width: 1.5px;
+    }
+
+    #sharedAxis.compact .shared-axis-label,
+    #sharedAxis.compact .shared-axis-custom { font-size: 11px; }
 
     [hidden] { display: none !important; }
 
@@ -507,7 +620,7 @@
       .marker-editor button { min-height: 36px; }
       #spectrum { height: 310px; }
       #waterfall { height: 364px; }
-      #sharedAxis { height: 62px; }
+      #sharedAxis { height: 58px; }
       .status { padding: 20px; font-size: 13px; }
     }
 
@@ -579,6 +692,7 @@
       </div>
       <div class="chart-wrap">
         <canvas id="spectrum"></canvas>
+        <svg id="spectrumOverlay" class="chart-overlay" preserveAspectRatio="none" aria-hidden="true"></svg>
         <form class="marker-editor" id="markerEditor" hidden>
           <label for="markerFrequency">输入频率</label>
           <input id="markerFrequency" type="number" min="20" max="20000" step="0.1" inputmode="decimal">
@@ -588,7 +702,7 @@
         <div class="status" id="status">启动麦克风后开始采集<br>实时采集请使用 Chrome / Edge 等外部浏览器</div>
       </div>
       <div class="shared-axis-wrap">
-        <canvas id="sharedAxis" aria-label="两张频谱图共用的频率横坐标"></canvas>
+        <svg id="sharedAxis" preserveAspectRatio="none" role="img" aria-label="两张频谱图共用的频率横坐标"></svg>
       </div>
       <div class="panel-head subhead">
         <div class="panel-title">SPECTRAL HISTORY / 历史频谱</div>
@@ -596,6 +710,7 @@
       </div>
       <div class="chart-wrap">
         <canvas id="waterfall"></canvas>
+        <svg id="waterfallOverlay" class="chart-overlay" preserveAspectRatio="none" aria-hidden="true"></svg>
       </div>
     </section>
 
@@ -621,7 +736,6 @@
     const PEAK_LABEL_HOLD_MS = 1200;
     const SPECTRUM_LABEL_SPACE = 84;
     const CUSTOM_GUIDE_COLOR = "rgba(255, 225, 111, .72)";
-    const CUSTOM_GUIDE_SHADOW = "#ffb64d";
     const CUSTOM_GUIDE_WIDTH = 1.25;
     const CUSTOM_GUIDE_DASH = [6, 5];
 
@@ -646,10 +760,12 @@
 
     const spectrumCanvas = document.querySelector("#spectrum");
     const spectrumCtx = spectrumCanvas.getContext("2d");
+    const spectrumOverlay = document.querySelector("#spectrumOverlay");
     const waterfallCanvas = document.querySelector("#waterfall");
     const waterfallCtx = waterfallCanvas.getContext("2d");
-    const sharedAxisCanvas = document.querySelector("#sharedAxis");
-    const sharedAxisCtx = sharedAxisCanvas.getContext("2d");
+    const waterfallOverlay = document.querySelector("#waterfallOverlay");
+    const sharedAxisSvg = document.querySelector("#sharedAxis");
+    const SVG_NS = "http://www.w3.org/2000/svg";
 
     let audioContext;
     let analyser;
@@ -682,7 +798,7 @@
     let traceBucketCache = null;
     let spectrumSize = { width: 1, height: 1, dpr: 1 };
     let waterfallSize = { width: 1, height: 1, dpr: 1 };
-    let sharedAxisSize = { width: 1, height: 1, dpr: 1 };
+    let sharedAxisSize = { width: 1, height: 1 };
     let waterfallBuffer = document.createElement("canvas");
     let waterfallBufferCtx = waterfallBuffer.getContext("2d");
 
@@ -697,10 +813,20 @@
       return { width, height, dpr };
     }
 
+    function fitSvg(svg, fallbackSize = null) {
+      const rect = svg.getBoundingClientRect();
+      const width = fallbackSize?.width ?? Math.max(1, Math.round(rect.width));
+      const height = fallbackSize?.height ?? Math.max(1, Math.round(rect.height));
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      return { width, height };
+    }
+
     function resizeCanvases() {
       spectrumSize = fitCanvas(spectrumCanvas, spectrumCtx);
       waterfallSize = fitCanvas(waterfallCanvas, waterfallCtx);
-      sharedAxisSize = fitCanvas(sharedAxisCanvas, sharedAxisCtx);
+      fitSvg(spectrumOverlay, spectrumSize);
+      fitSvg(waterfallOverlay, waterfallSize);
+      sharedAxisSize = fitSvg(sharedAxisSvg);
       traceBucketCache = null;
 
       const previous = waterfallBuffer;
@@ -807,12 +933,29 @@
       drawSharedAxis();
     }
 
+    function svgNode(tagName, attributes = {}, text = null) {
+      const node = document.createElementNS(SVG_NS, tagName);
+      for (const [name, value] of Object.entries(attributes)) {
+        if (value !== null && value !== undefined) node.setAttribute(name, value);
+      }
+      if (text !== null) node.textContent = text;
+      return node;
+    }
+
+    function svgText(text, x, y, className, anchor = "start") {
+      return svgNode("text", {
+        x,
+        y,
+        class: className,
+        "text-anchor": anchor,
+        "dominant-baseline": "hanging"
+      }, text);
+    }
+
     function drawFrequencyGrid(context, width, height, withDbLabels) {
       const frequencyMarks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
       context.save();
       context.lineWidth = 1;
-      context.font = "11px Consolas, monospace";
-      context.textBaseline = "top";
 
       for (const frequency of frequencyMarks) {
         if (frequency > getMaxFrequency()) continue;
@@ -834,8 +977,6 @@
           context.moveTo(0, y);
           context.lineTo(width, y);
           context.stroke();
-          context.fillStyle = "rgba(190, 177, 207, .65)";
-          context.fillText(`${db} dB`, 8, Math.max(5, y - 16));
         }
       }
       context.restore();
@@ -910,130 +1051,31 @@
       context.restore();
     }
 
-    function drawCustomMeasurement(displayData, width, height) {
-      customMarkerHitArea = null;
-      if (customFrequency === null || !displayData || !analyser) return;
-
-      const frequency = clampFrequency(customFrequency);
-      const db = getLevelAtFrequency(displayData, frequency);
-      if (!Number.isFinite(db)) return;
-
+    function renderSpectrumOverlay(displayData, peaks, width, height) {
       const compact = width < 520;
-      const x = frequencyToX(frequency, width);
-      const y = dbToY(db, height);
-      const color = "#ffe16f";
-      const frequencyText = formatFrequency(frequency);
-      const levelText = `${db.toFixed(1)} dBFS`;
-      const frequencyFont = `900 ${compact ? 16 : 20}px Consolas, monospace`;
-      const levelFont = `800 ${compact ? 12 : 14}px Consolas, monospace`;
+      spectrumOverlay.classList.toggle("compact", compact);
+      const nodes = [];
 
-      spectrumCtx.save();
-      spectrumCtx.shadowColor = CUSTOM_GUIDE_SHADOW;
-      spectrumCtx.shadowBlur = 5;
-      spectrumCtx.strokeStyle = CUSTOM_GUIDE_COLOR;
-      spectrumCtx.lineWidth = CUSTOM_GUIDE_WIDTH;
-      spectrumCtx.setLineDash(CUSTOM_GUIDE_DASH);
-      spectrumCtx.beginPath();
-      spectrumCtx.moveTo(x, 0);
-      spectrumCtx.lineTo(x, height);
-      spectrumCtx.stroke();
-      spectrumCtx.setLineDash([]);
-
-      spectrumCtx.font = frequencyFont;
-      const frequencyWidth = spectrumCtx.measureText(frequencyText).width;
-      spectrumCtx.font = levelFont;
-      const levelWidth = spectrumCtx.measureText(levelText).width;
-      const labelWidth = Math.max(frequencyWidth, levelWidth) + 16;
-      const labelHeight = compact ? 39 : 45;
-      const labelX = Math.max(labelWidth / 2 + 5, Math.min(width - labelWidth / 2 - 5, x));
-      const labelY = Math.max(5, y - labelHeight - 15);
-      const anchorY = labelY + labelHeight;
-
-      spectrumCtx.strokeStyle = color;
-      spectrumCtx.globalAlpha = .8;
-      spectrumCtx.lineWidth = 1.5;
-      spectrumCtx.beginPath();
-      spectrumCtx.moveTo(x, y);
-      spectrumCtx.lineTo(labelX, anchorY);
-      spectrumCtx.stroke();
-      spectrumCtx.globalAlpha = 1;
-
-      spectrumCtx.textAlign = "center";
-      spectrumCtx.textBaseline = "top";
-      spectrumCtx.lineWidth = compact ? 3.5 : 4.5;
-      spectrumCtx.strokeStyle = "rgba(3, 1, 12, .98)";
-      spectrumCtx.shadowColor = color;
-      spectrumCtx.shadowBlur = 6;
-      spectrumCtx.font = frequencyFont;
-      spectrumCtx.strokeText(frequencyText, labelX, labelY);
-      spectrumCtx.fillStyle = color;
-      spectrumCtx.fillText(frequencyText, labelX, labelY);
-      spectrumCtx.font = levelFont;
-      const levelY = labelY + (compact ? 22 : 26);
-      spectrumCtx.strokeText(levelText, labelX, levelY);
-      spectrumCtx.fillStyle = "#fff8dd";
-      spectrumCtx.fillText(levelText, labelX, levelY);
-
-      spectrumCtx.fillStyle = "#050112";
-      spectrumCtx.strokeStyle = color;
-      spectrumCtx.lineWidth = 2.5;
-      spectrumCtx.shadowBlur = 9;
-      spectrumCtx.beginPath();
-      spectrumCtx.arc(x, y, compact ? 7 : 8, 0, Math.PI * 2);
-      spectrumCtx.fill();
-      spectrumCtx.stroke();
-      spectrumCtx.beginPath();
-      spectrumCtx.moveTo(x - 12, y);
-      spectrumCtx.lineTo(x + 12, y);
-      spectrumCtx.moveTo(x, y - 12);
-      spectrumCtx.lineTo(x, y + 12);
-      spectrumCtx.stroke();
-      spectrumCtx.restore();
-
-      customMarkerHitArea = {
-        pointX: x,
-        pointY: y,
-        labelLeft: labelX - labelWidth / 2,
-        labelTop: labelY,
-        labelWidth,
-        labelHeight
-      };
-    }
-
-    function drawSpectrum(displayData = spectrum, peaks = []) {
-      const { width, height } = spectrumSize;
-      spectrumCtx.clearRect(0, 0, width, height);
-      const background = spectrumCtx.createLinearGradient(0, 0, 0, height);
-      background.addColorStop(0, "#0b0320");
-      background.addColorStop(1, "#02010a");
-      spectrumCtx.fillStyle = background;
-      spectrumCtx.fillRect(0, 0, width, height);
-      drawFrequencyGrid(spectrumCtx, width, height, true);
-
-      if (!displayData) return;
-      if (!showAnalysis) {
-        drawTrace(spectrumCtx, peakHold, "rgba(255, 60, 172, .78)", 1.1, "#ff3cac", null);
+      for (const db of [-100, -80, -60, -40, -20]) {
+        const y = dbToY(db, height);
+        nodes.push(svgText(`${db} dB`, 8, Math.max(5, y - 16), "overlay-axis-label"));
       }
-      const fill = spectrumCtx.createLinearGradient(0, 0, 0, height);
-      fill.addColorStop(0, showAnalysis ? "rgba(255, 208, 110, .24)" : "rgba(77, 246, 255, .22)");
-      fill.addColorStop(.58, "rgba(116, 65, 205, .1)");
-      fill.addColorStop(1, "rgba(8, 2, 24, 0)");
-      const traceGradient = spectrumCtx.createLinearGradient(0, 0, width, 0);
-      traceGradient.addColorStop(0, showAnalysis ? "#ffd06e" : "#4df6ff");
-      traceGradient.addColorStop(.54, showAnalysis ? "#ff77c7" : "#b875ff");
-      traceGradient.addColorStop(1, showAnalysis ? "#4df6ff" : "#ffcf62");
-      drawTrace(spectrumCtx, displayData, traceGradient, showAnalysis ? 2.2 : 1.65, showAnalysis ? "#ffb64d" : "#4df6ff", fill);
 
-      spectrumCtx.save();
-      spectrumCtx.textAlign = "center";
-      spectrumCtx.textBaseline = "top";
+      customMarkerHitArea = null;
+      if (!displayData || !analyser) {
+        spectrumOverlay.replaceChildren(...nodes);
+        return;
+      }
+
       const separatedColors = ["#ffd06e", "#ff75ca", "#73f8ff"];
       const unifiedLiveColor = "#73f8ff";
       const useUnifiedColor = running && !showAnalysis;
-      const compactLabels = width < 520;
-      const frequencyFont = `900 ${compactLabels ? 15 : 19}px Consolas, monospace`;
-      const levelFont = `800 ${compactLabels ? 12 : 14}px Consolas, monospace`;
+      const frequencyFont = `900 ${compact ? 15 : 19}px Consolas, monospace`;
+      const levelFont = `800 ${compact ? 12 : 14}px Consolas, monospace`;
+      const detailFont = `800 ${compact ? 10 : 11}px Consolas, monospace`;
       const placedLabels = [];
+
+      spectrumCtx.save();
       peaks.slice(0, 3).forEach((peak, index) => {
         const x = frequencyToX(peak.frequency, width);
         const y = dbToY(peak.db, height);
@@ -1041,15 +1083,17 @@
         const frequencyText = formatPeakFrequency(peak.frequency);
         const levelText = `${peak.db.toFixed(1)} dB`;
         const detailText = Number.isFinite(peak.prominence) && Number.isFinite(peak.occurrence)
-          ? `${compactLabels ? "↑" : "突出 +"}${peak.prominence.toFixed(1)} dB · ${Math.round(peak.occurrence * 100)}%`
+          ? `${compact ? "↑" : "突出 +"}${peak.prominence.toFixed(1)} dB · ${Math.round(peak.occurrence * 100)}%`
           : "";
+
         spectrumCtx.font = frequencyFont;
         const frequencyWidth = spectrumCtx.measureText(frequencyText).width;
         spectrumCtx.font = levelFont;
         const levelWidth = spectrumCtx.measureText(levelText).width;
+        spectrumCtx.font = detailFont;
         const detailWidth = detailText ? spectrumCtx.measureText(detailText).width : 0;
         const labelWidth = Math.max(frequencyWidth, levelWidth, detailWidth) + 10;
-        const labelHeight = detailText ? (compactLabels ? 56 : 62) : (compactLabels ? 38 : 44);
+        const labelHeight = detailText ? (compact ? 56 : 62) : (compact ? 38 : 44);
         let labelX = Math.max(labelWidth / 2 + 5, Math.min(width - labelWidth / 2 - 5, x));
         let labelY = Math.max(5, y - labelHeight - 15);
 
@@ -1065,99 +1109,270 @@
         placedLabels.push({ x: labelX - labelWidth / 2, y: labelY, width: labelWidth, height: labelHeight });
 
         const anchorY = labelY + labelHeight;
-        spectrumCtx.strokeStyle = markerColor;
-        spectrumCtx.globalAlpha = .52;
-        spectrumCtx.shadowBlur = 0;
-        spectrumCtx.lineWidth = 1.2;
-        spectrumCtx.beginPath();
-        spectrumCtx.moveTo(x, y);
-        spectrumCtx.lineTo(labelX, anchorY);
-        spectrumCtx.stroke();
-        spectrumCtx.globalAlpha = 1;
+        const markerGroup = svgNode("g", { class: "peak-marker" });
+        markerGroup.append(
+          svgNode("line", {
+            class: "overlay-line",
+            x1: x,
+            y1: y,
+            x2: labelX,
+            y2: anchorY,
+            stroke: markerColor,
+            "stroke-width": 1.2,
+            opacity: .64
+          }),
+          svgNode("circle", {
+            cx: x,
+            cy: y,
+            r: compact ? 5 : 6,
+            fill: "#050112",
+            stroke: markerColor,
+            "stroke-width": 2,
+            "vector-effect": "non-scaling-stroke"
+          })
+        );
 
-        spectrumCtx.lineWidth = compactLabels ? 3.5 : 4.5;
-        spectrumCtx.strokeStyle = "rgba(3, 1, 12, .96)";
-        spectrumCtx.shadowColor = markerColor;
-        spectrumCtx.shadowBlur = 4;
-        spectrumCtx.font = frequencyFont;
-        spectrumCtx.strokeText(frequencyText, labelX, labelY);
-        spectrumCtx.fillStyle = markerColor;
-        spectrumCtx.fillText(frequencyText, labelX, labelY);
-        spectrumCtx.font = levelFont;
-        const levelY = labelY + (compactLabels ? 21 : 25);
-        spectrumCtx.strokeText(levelText, labelX, levelY);
-        spectrumCtx.fillStyle = "rgba(247, 239, 255, .92)";
-        spectrumCtx.fillText(levelText, labelX, levelY);
+        const frequencyLabel = svgText(frequencyText, labelX, labelY, "peak-frequency", "middle");
+        frequencyLabel.setAttribute("fill", markerColor);
+        markerGroup.append(frequencyLabel);
+
+        const levelY = labelY + (compact ? 21 : 25);
+        markerGroup.append(svgText(levelText, labelX, levelY, "peak-level", "middle"));
         if (detailText) {
-          const detailY = levelY + (compactLabels ? 17 : 19);
-          spectrumCtx.font = `800 ${compactLabels ? 10 : 11}px Consolas, monospace`;
-          spectrumCtx.strokeText(detailText, labelX, detailY);
-          spectrumCtx.fillStyle = markerColor;
-          spectrumCtx.fillText(detailText, labelX, detailY);
+          const detailY = levelY + (compact ? 17 : 19);
+          const detailLabel = svgText(detailText, labelX, detailY, "peak-detail", "middle");
+          detailLabel.setAttribute("fill", markerColor);
+          markerGroup.append(detailLabel);
         }
-
-        spectrumCtx.fillStyle = "#050112";
-        spectrumCtx.strokeStyle = markerColor;
-        spectrumCtx.lineWidth = 2;
-        spectrumCtx.shadowBlur = 5;
-        spectrumCtx.beginPath();
-        spectrumCtx.arc(x, y, compactLabels ? 5 : 6, 0, Math.PI * 2);
-        spectrumCtx.fill();
-        spectrumCtx.stroke();
+        nodes.push(markerGroup);
       });
+
+      if (customFrequency !== null) {
+        const frequency = clampFrequency(customFrequency);
+        const db = getLevelAtFrequency(displayData, frequency);
+        if (Number.isFinite(db)) {
+          const x = frequencyToX(frequency, width);
+          const y = dbToY(db, height);
+          const color = "#ffe16f";
+          const frequencyText = formatFrequency(frequency);
+          const levelText = `${db.toFixed(1)} dBFS`;
+          const customFrequencyFont = `900 ${compact ? 15 : 19}px Consolas, monospace`;
+
+          spectrumCtx.font = customFrequencyFont;
+          const frequencyWidth = spectrumCtx.measureText(frequencyText).width;
+          spectrumCtx.font = levelFont;
+          const levelWidth = spectrumCtx.measureText(levelText).width;
+          const labelWidth = Math.max(frequencyWidth, levelWidth) + 16;
+          const labelHeight = compact ? 39 : 45;
+          const labelX = Math.max(labelWidth / 2 + 5, Math.min(width - labelWidth / 2 - 5, x));
+          const labelY = Math.max(5, y - labelHeight - 15);
+          const anchorY = labelY + labelHeight;
+          const measurementGroup = svgNode("g", { class: "measurement-marker" });
+
+          measurementGroup.append(
+            svgNode("line", {
+              class: "overlay-line",
+              x1: x,
+              y1: 0,
+              x2: x,
+              y2: height,
+              stroke: CUSTOM_GUIDE_COLOR,
+              "stroke-width": CUSTOM_GUIDE_WIDTH,
+              "stroke-dasharray": CUSTOM_GUIDE_DASH.join(" ")
+            }),
+            svgNode("line", {
+              class: "overlay-line",
+              x1: x,
+              y1: y,
+              x2: labelX,
+              y2: anchorY,
+              stroke: color,
+              "stroke-width": 1.5,
+              opacity: .86
+            }),
+            svgNode("circle", {
+              cx: x,
+              cy: y,
+              r: compact ? 7 : 8,
+              fill: "#050112",
+              stroke: color,
+              "stroke-width": 2.5,
+              "vector-effect": "non-scaling-stroke"
+            }),
+            svgNode("line", {
+              class: "overlay-line",
+              x1: x - 12,
+              y1: y,
+              x2: x + 12,
+              y2: y,
+              stroke: color,
+              "stroke-width": 2.5
+            }),
+            svgNode("line", {
+              class: "overlay-line",
+              x1: x,
+              y1: y - 12,
+              x2: x,
+              y2: y + 12,
+              stroke: color,
+              "stroke-width": 2.5
+            })
+          );
+
+          const frequencyLabel = svgText(frequencyText, labelX, labelY, "measurement-frequency", "middle");
+          frequencyLabel.setAttribute("fill", color);
+          measurementGroup.append(
+            frequencyLabel,
+            svgText(levelText, labelX, labelY + (compact ? 22 : 26), "measurement-level", "middle")
+          );
+          nodes.push(measurementGroup);
+
+          customMarkerHitArea = {
+            pointX: x,
+            pointY: y,
+            labelLeft: labelX - labelWidth / 2,
+            labelTop: labelY,
+            labelWidth,
+            labelHeight
+          };
+        }
+      }
       spectrumCtx.restore();
-      drawCustomMeasurement(displayData, width, height);
+      spectrumOverlay.replaceChildren(...nodes);
+    }
+
+    function drawSpectrum(displayData = spectrum, peaks = []) {
+      const { width, height } = spectrumSize;
+      spectrumCtx.clearRect(0, 0, width, height);
+      const background = spectrumCtx.createLinearGradient(0, 0, 0, height);
+      background.addColorStop(0, "#0b0320");
+      background.addColorStop(1, "#02010a");
+      spectrumCtx.fillStyle = background;
+      spectrumCtx.fillRect(0, 0, width, height);
+      drawFrequencyGrid(spectrumCtx, width, height, true);
+
+      if (!displayData) {
+        renderSpectrumOverlay(null, [], width, height);
+        return;
+      }
+      if (!showAnalysis) {
+        drawTrace(spectrumCtx, peakHold, "rgba(255, 60, 172, .78)", 1.1, "#ff3cac", null);
+      }
+      const fill = spectrumCtx.createLinearGradient(0, 0, 0, height);
+      fill.addColorStop(0, showAnalysis ? "rgba(255, 208, 110, .24)" : "rgba(77, 246, 255, .22)");
+      fill.addColorStop(.58, "rgba(116, 65, 205, .1)");
+      fill.addColorStop(1, "rgba(8, 2, 24, 0)");
+      const traceGradient = spectrumCtx.createLinearGradient(0, 0, width, 0);
+      traceGradient.addColorStop(0, showAnalysis ? "#ffd06e" : "#4df6ff");
+      traceGradient.addColorStop(.54, showAnalysis ? "#ff77c7" : "#b875ff");
+      traceGradient.addColorStop(1, showAnalysis ? "#4df6ff" : "#ffcf62");
+      drawTrace(spectrumCtx, displayData, traceGradient, showAnalysis ? 2.2 : 1.65, showAnalysis ? "#ffb64d" : "#4df6ff", fill);
+
+      renderSpectrumOverlay(displayData, peaks, width, height);
+    }
+
+    function formatAxisFrequency(frequency) {
+      if (frequency >= 1000) return `${frequency / 1000}k`;
+      return String(frequency);
+    }
+
+    function getAxisLabelLayout(frequency, index, marks, width, fontSize) {
+      const text = formatAxisFrequency(frequency);
+      const estimatedWidth = Math.max(fontSize, text.length * fontSize * .62);
+      const isFirst = index === 0;
+      const isLast = index === marks.length - 1;
+      const rawX = frequencyToX(frequency, width);
+      const x = isFirst ? 8 : isLast ? width - 8 : rawX;
+      const anchor = isFirst ? "start" : isLast ? "end" : "middle";
+      const left = anchor === "start" ? x : anchor === "end" ? x - estimatedWidth : x - estimatedWidth / 2;
+      const right = anchor === "start" ? x + estimatedWidth : anchor === "end" ? x : x + estimatedWidth / 2;
+      return { text, x, anchor, left, right, rawX };
     }
 
     function drawSharedAxis() {
-      const { width, height } = sharedAxisSize;
-      const axisY = 12;
-      const frequencyMarks = width < 720
-        ? [20, 50, 100, 200, 500, 1000, 2000, 5000, 20000]
-        : [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
-      sharedAxisCtx.clearRect(0, 0, width, height);
-      sharedAxisCtx.save();
-      sharedAxisCtx.font = `${width < 520 ? 9 : 10}px Consolas, monospace`;
-      sharedAxisCtx.textAlign = "center";
-      sharedAxisCtx.textBaseline = "top";
-      sharedAxisCtx.strokeStyle = "rgba(77, 246, 255, .38)";
-      sharedAxisCtx.beginPath();
-      sharedAxisCtx.moveTo(0, axisY);
-      sharedAxisCtx.lineTo(width, axisY);
-      sharedAxisCtx.stroke();
+      const { width } = sharedAxisSize;
+      const compact = width < 520;
+      const axisY = 15;
+      const fontSize = compact ? 11 : 12;
+      const labelGap = compact ? 7 : 9;
+      const majorFrequencies = new Set([20, 100, 1000, 10000, 20000]);
+      const frequencyMarks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]
+        .filter(frequency => frequency <= getMaxFrequency());
+      sharedAxisSvg.classList.toggle("compact", compact);
 
-      for (const frequency of frequencyMarks) {
-        if (frequency > getMaxFrequency()) continue;
-        const rawX = frequencyToX(frequency, width);
-        const x = Math.max(28, Math.min(width - 28, rawX));
-        sharedAxisCtx.strokeStyle = frequency === 50 || frequency === 100
-          ? "rgba(255, 60, 172, .72)"
-          : "rgba(77, 246, 255, .54)";
-        sharedAxisCtx.beginPath();
-        sharedAxisCtx.moveTo(rawX, axisY - 7);
-        sharedAxisCtx.lineTo(rawX, axisY + 6);
-        sharedAxisCtx.stroke();
-        sharedAxisCtx.fillStyle = "rgba(202, 190, 218, .82)";
-        sharedAxisCtx.fillText(`${frequency} Hz`, x, axisY + 10);
-      }
+      const nodes = [
+        svgText("FREQUENCY", 8, 1, "shared-axis-caption"),
+        svgText("Hz", width - 8, 1, "shared-axis-unit", "end"),
+        svgNode("line", {
+          class: "shared-axis-line",
+          x1: 0,
+          y1: axisY,
+          x2: width,
+          y2: axisY,
+          stroke: "rgba(77, 246, 255, .42)",
+          "stroke-width": 1
+        })
+      ];
+
+      const labelLayouts = frequencyMarks.map((frequency, index) =>
+        getAxisLabelLayout(frequency, index, frequencyMarks, width, fontSize)
+      );
+      const lastLabel = labelLayouts.at(-1);
+      let previousLabelRight = -Infinity;
+
+      frequencyMarks.forEach((frequency, index) => {
+        const isMajor = majorFrequencies.has(frequency);
+        const isFocusFrequency = frequency === 50 || frequency === 100;
+        const layout = labelLayouts[index];
+        const tickColor = isFocusFrequency
+          ? "rgba(255, 60, 172, .8)"
+          : isMajor
+            ? "rgba(77, 246, 255, .72)"
+            : "rgba(77, 246, 255, .38)";
+        const tickHalfHeight = isMajor ? 8 : 5;
+        nodes.push(svgNode("line", {
+          class: `shared-axis-tick${isMajor ? " major" : ""}`,
+          x1: layout.rawX,
+          y1: axisY - tickHalfHeight,
+          x2: layout.rawX,
+          y2: axisY + tickHalfHeight,
+          stroke: tickColor,
+          "stroke-width": isMajor ? 1.4 : 1
+        }));
+
+        const overlapsPrevious = layout.left < previousLabelRight + labelGap;
+        const overlapsLast = index < labelLayouts.length - 1 &&
+          layout.right + labelGap > lastLabel.left;
+        if (!overlapsPrevious && !overlapsLast || index === labelLayouts.length - 1) {
+          nodes.push(svgText(
+            layout.text,
+            layout.x,
+            axisY + 10,
+            `shared-axis-label${isMajor ? " major" : ""}`,
+            layout.anchor
+          ));
+          previousLabelRight = layout.right;
+        }
+      });
 
       if (customFrequency !== null) {
         const frequency = clampFrequency(customFrequency);
         const rawX = frequencyToX(frequency, width);
         const labelX = Math.max(38, Math.min(width - 38, rawX));
-        sharedAxisCtx.strokeStyle = "#ffe16f";
-        sharedAxisCtx.fillStyle = "#ffe16f";
-        sharedAxisCtx.lineWidth = 2;
-        sharedAxisCtx.shadowColor = "#ffb64d";
-        sharedAxisCtx.shadowBlur = 8;
-        sharedAxisCtx.beginPath();
-        sharedAxisCtx.moveTo(rawX, axisY - 9);
-        sharedAxisCtx.lineTo(rawX, axisY + 9);
-        sharedAxisCtx.stroke();
-        sharedAxisCtx.font = `800 ${width < 520 ? 10 : 11}px Consolas, monospace`;
-        sharedAxisCtx.fillText(formatFrequency(frequency), labelX, axisY + 31);
+        nodes.push(
+          svgNode("line", {
+            class: "shared-axis-tick",
+            x1: rawX,
+            y1: axisY - 10,
+            x2: rawX,
+            y2: axisY + 10,
+            stroke: "#ffe16f",
+            "stroke-width": 2
+          }),
+          svgText(formatFrequency(frequency), labelX, axisY + 29, "shared-axis-custom", "middle")
+        );
       }
-      sharedAxisCtx.restore();
+      sharedAxisSvg.replaceChildren(...nodes);
     }
 
     function colorForLevel(db) {
@@ -1220,6 +1435,35 @@
       updateAnalyzeAvailability();
     }
 
+    function renderWaterfallOverlay(width, height) {
+      const nodes = [];
+      const secondsVisible = 20;
+      for (let seconds = 0; seconds <= secondsVisible; seconds += 5) {
+        const y = seconds / secondsVisible * height;
+        nodes.push(svgText(
+          seconds === 0 ? "NOW" : `-${seconds}s`,
+          8,
+          Math.min(height - 35, y + 5),
+          "overlay-time-label"
+        ));
+      }
+
+      if (customFrequency !== null) {
+        const x = frequencyToX(clampFrequency(customFrequency), width);
+        nodes.push(svgNode("line", {
+          class: "overlay-line",
+          x1: x,
+          y1: 0,
+          x2: x,
+          y2: height,
+          stroke: CUSTOM_GUIDE_COLOR,
+          "stroke-width": CUSTOM_GUIDE_WIDTH,
+          "stroke-dasharray": CUSTOM_GUIDE_DASH.join(" ")
+        }));
+      }
+      waterfallOverlay.replaceChildren(...nodes);
+    }
+
     function drawWaterfall() {
       const { width, height } = waterfallSize;
       waterfallCtx.clearRect(0, 0, width, height);
@@ -1231,8 +1475,6 @@
 
       const secondsVisible = 20;
       waterfallCtx.save();
-      waterfallCtx.font = "11px Consolas, monospace";
-      waterfallCtx.textBaseline = "top";
       for (let seconds = 0; seconds <= secondsVisible; seconds += 5) {
         const y = seconds / secondsVisible * height;
         waterfallCtx.strokeStyle = "rgba(255, 255, 255, .1)";
@@ -1240,26 +1482,9 @@
         waterfallCtx.moveTo(0, y);
         waterfallCtx.lineTo(width, y);
         waterfallCtx.stroke();
-        waterfallCtx.fillStyle = "rgba(255, 255, 255, .72)";
-        waterfallCtx.fillText(seconds === 0 ? "NOW" : `-${seconds}s`, 8, Math.min(height - 35, y + 5));
       }
       waterfallCtx.restore();
-
-      if (customFrequency !== null) {
-        const x = frequencyToX(clampFrequency(customFrequency), width);
-        waterfallCtx.save();
-        waterfallCtx.strokeStyle = CUSTOM_GUIDE_COLOR;
-        waterfallCtx.lineWidth = CUSTOM_GUIDE_WIDTH;
-        waterfallCtx.shadowColor = CUSTOM_GUIDE_SHADOW;
-        waterfallCtx.shadowBlur = 5;
-        waterfallCtx.setLineDash(CUSTOM_GUIDE_DASH);
-        waterfallCtx.beginPath();
-        waterfallCtx.moveTo(x, 0);
-        waterfallCtx.lineTo(x, height);
-        waterfallCtx.stroke();
-        waterfallCtx.setLineDash([]);
-        waterfallCtx.restore();
-      }
+      renderWaterfallOverlay(width, height);
       historyWindowLabel.textContent = "TIME ↓ · 20 秒窗口";
     }
 
