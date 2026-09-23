@@ -1,0 +1,9 @@
+{
+  "name": "neon-noise",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-isolation=none test/spectrum-core.test.js",
+    "bench": "node test/benchmark.mjs"
+  }
+}

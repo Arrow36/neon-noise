@@ -23,7 +23,7 @@
 
     * { box-sizing: border-box; }
 
-    html { min-width: 320px; background: var(--night); }
+    html { background: var(--night); }
 
     body {
       margin: 0;
@@ -73,6 +73,7 @@
     }
 
     .shell {
+      position: relative;
       width: min(1220px, calc(100% - 32px));
       margin: 0 auto;
       padding: 30px 0 64px;
@@ -125,8 +126,10 @@
     .live-pill {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 9px;
       flex: 0 0 auto;
+      min-height: 0;
       padding: 8px 12px;
       border: 1px solid rgba(255, 60, 172, .34);
       border-radius: 999px;
@@ -134,6 +137,17 @@
       background: rgba(16, 5, 38, .74);
       font: 700 11px/1 Consolas, monospace;
       letter-spacing: .13em;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      max-width: 360px;
+      min-width: 0;
     }
 
     .live-dot {
@@ -251,20 +265,35 @@
     .analysis-mode-control select {
       min-width: 190px;
       max-width: 265px;
-      height: 30px;
+      align-self: stretch;
+      height: auto;
+      min-height: 38px;
       border: 0;
       outline: 0;
       color: #fff1ca;
-      background: #160a29;
+      background: transparent;
       font: 700 11px/1 "Microsoft YaHei", system-ui, sans-serif;
+      text-align: center;
+      text-align-last: center;
       cursor: pointer;
     }
 
+    .analysis-mode-control select option {
+      color: #1b1029;
+      background: #fff;
+    }
+
     .resolution {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 2px 8px;
       color: #9087a2;
       font: 11px/1.45 Consolas, monospace;
       text-align: right;
     }
+
+    .resolution span { white-space: nowrap; }
 
     .metrics {
       display: grid;
@@ -295,16 +324,29 @@
     }
 
     .metric:nth-child(2) { --glow: var(--pink); }
-    .metric-label { color: #9288a5; font: 700 10px/1 Consolas, monospace; letter-spacing: .16em; }
+    .metric-label {
+      display: grid;
+      gap: 4px;
+      color: #9288a5;
+      font: 700 10px/1.1 Consolas, monospace;
+      letter-spacing: .1em;
+    }
+    .metric-label-en { white-space: nowrap; }
+    .metric-label-zh { font-size: 11px; letter-spacing: .12em; }
 
     .metric-value {
       position: relative;
       z-index: 1;
+      display: flex;
+      align-items: baseline;
+      gap: .3em;
+      white-space: nowrap;
       margin-top: 10px;
       color: var(--cyan);
       font: 800 clamp(24px, 4.2vw, 40px)/1 Consolas, monospace;
       text-shadow: 0 0 18px rgba(77, 246, 255, .32);
     }
+    .metric-unit { font-size: .65em; }
 
     .metric:nth-child(2) .metric-value { color: #ff76c8; text-shadow: 0 0 18px rgba(255, 60, 172, .3); }
 
@@ -484,6 +526,21 @@
       font-size: 10px;
     }
 
+    .clear-chart {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      min-height: 34px;
+      padding: 0;
+      border-color: rgba(255, 60, 172, .35);
+      color: #ff9bd4;
+      background: rgba(255, 60, 172, .08);
+    }
+
+    .clear-chart:hover:not(:disabled) { box-shadow: 0 0 14px rgba(255, 60, 172, .3); }
+
     .marker-editor {
       position: absolute;
       z-index: 5;
@@ -528,22 +585,43 @@
 
     .status {
       position: absolute;
-      inset: 0;
       z-index: 3;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
       display: grid;
       place-items: center;
-      padding: 28px;
+      gap: 2px;
+      width: max-content;
+      max-width: calc(100% - 24px);
+      padding: 7px 12px;
       color: #b6aac8;
-      background: radial-gradient(circle, rgba(16, 6, 43, .36), transparent 65%);
+      border: 1px solid rgba(94, 222, 255, .22);
+      border-radius: 8px;
+      background: rgba(16, 6, 43, .9);
       text-align: center;
       pointer-events: none;
     }
+
+    .status small { font-size: 11px; }
 
     .footer-note {
       margin: 14px 3px 0;
       color: #746b82;
       font-size: 12px;
     }
+
+    .footer-note a {
+      position: absolute;
+      right: 0;
+      bottom: 18px;
+      background: linear-gradient(90deg, #ffffff 0%, var(--cyan) 35%, #bd77ff 68%, var(--pink) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+    .footer-note a:hover { filter: brightness(1.2); }
 
     @media (min-width: 761px) and (max-width: 900px) {
       .control-deck {
@@ -560,8 +638,8 @@
         width: 100%;
       }
 
-      .controls button {
-        grid-column: span 2;
+      .controls > button {
+        grid-column: span 3;
         width: 100%;
         min-width: 0;
         padding-inline: 9px;
@@ -586,26 +664,55 @@
         min-width: 0;
       }
 
-      .resolution {
-        width: 100%;
-        padding-inline: 2px;
-        text-align: left;
-      }
     }
 
     @media (max-width: 760px) {
       .shell { width: min(100% - 14px, 1220px); padding: 15px 0 42px; }
       header { align-items: start; flex-direction: column; gap: 11px; margin-bottom: 16px; }
-      .control-deck { align-items: stretch; flex-direction: column; padding: 10px; }
+      .control-deck {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        box-shadow: none;
+        backdrop-filter: none;
+      }
       .controls { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
       .controls button { width: 100%; min-height: 48px; padding: 0 10px; }
-      #clear { grid-column: 1 / -1; }
       .analysis-mode-control { grid-column: 1 / -1; width: 100%; min-height: 48px; }
-      .analysis-mode-control select { flex: 1; max-width: none; min-height: 36px; }
+      .analysis-mode-control select { flex: 1; min-width: 0; max-width: none; }
       .gain-control { grid-column: 1 / -1; width: 100%; min-height: 50px; }
-      .resolution { width: 100%; text-align: left; }
+      .status-row {
+        display: block;
+        width: 100%;
+        max-width: none;
+      }
+      .status-row .live-pill {
+        position: fixed;
+        z-index: 50;
+        top: 10px;
+        right: 10px;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
+        padding: 0;
+      }
+      .status-row .live-dot { width: 10px; height: 10px; }
+      .status-row #liveText {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      .resolution { min-width: 0; justify-content: flex-start; gap: 2px 6px; font-size: 10px; line-height: 1.3; text-align: left; }
       .metrics { grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
       .metric { min-height: 92px; padding: 13px 14px; }
+      .metric-label-en { font-size: clamp(8px, 2.8vw, 10px); }
       .metric-value { font-size: clamp(23px, 7vw, 32px); }
       .panel { margin-top: 10px; }
       .panel-head { min-height: 48px; padding: 10px 12px; }
@@ -622,7 +729,9 @@
       #spectrum { height: 310px; }
       #waterfall { height: 364px; }
       #sharedAxis { height: 58px; }
-      .status { padding: 20px; font-size: 13px; }
+      .status { padding: 6px 10px; font-size: 13px; }
+      .footer-note { line-height: 1.5; }
+      .footer-note a { bottom: 10px; }
     }
 
     @media (max-width: 470px) {
@@ -631,6 +740,11 @@
       .subtitle { font-size: 13px; }
       .panel-title { font-size: 10px; letter-spacing: .1em; }
       .panel-note { display: none; }
+    }
+
+    @media (max-width: 340px) {
+      .eyebrow { font-size: 9px; letter-spacing: .12em; }
+      h1 { font-size: 28px; }
     }
 
     @media (pointer: coarse) {
@@ -646,14 +760,16 @@
         <h1>NEON//NOISE</h1>
         <p class="subtitle">实时噪音频谱、峰值保持与历史频谱瀑布图</p>
       </div>
-      <div class="live-pill" id="livePill"><span class="live-dot"></span><span id="liveText">STANDBY</span></div>
+      <div class="status-row">
+        <button class="live-pill" id="livePill" type="button" aria-live="polite"><span class="live-dot" aria-hidden="true"></span><span id="liveText">STANDBY</span></button>
+        <div class="resolution" id="resolution"><span>FFT 32768</span><span>等待音频输入</span></div>
+      </div>
     </header>
 
     <section class="control-deck">
       <div class="controls">
         <button class="primary" id="start">启动麦克风</button>
         <button class="analysis-button" id="analyze" type="button" disabled>分析历史频谱</button>
-        <button class="ghost" id="clear" type="button">清空历史</button>
         <label class="analysis-mode-control">
           <span>分析方式</span>
           <select id="analysisMode" aria-label="历史频谱分析方式">
@@ -665,21 +781,20 @@
         </label>
         <label class="gain-control">
           <span>INPUT GAIN</span>
-          <input id="gain" type="range" min="-24" max="24" value="0" step="1">
+          <input id="gain" type="range" min="-36" max="36" value="0" step="1">
           <output id="gainValue" for="gain">+0 dB</output>
         </label>
       </div>
-      <div class="resolution" id="resolution">FFT 32768 · 等待音频输入</div>
     </section>
 
     <section class="metrics">
       <article class="metric">
-        <div class="metric-label">DOMINANT FREQUENCY / 最强频率</div>
-        <div class="metric-value" id="frequency">— Hz</div>
+        <div class="metric-label"><span class="metric-label-en">DOMINANT FREQUENCY</span><span class="metric-label-zh">最强频率</span></div>
+        <div class="metric-value" id="frequency"><span id="frequencyNumber">—</span><span class="metric-unit">Hz</span></div>
       </article>
       <article class="metric">
-        <div class="metric-label">RELATIVE LEVEL / 相对电平</div>
-        <div class="metric-value" id="level">— dBFS</div>
+        <div class="metric-label"><span class="metric-label-en">RELATIVE LEVEL</span><span class="metric-label-zh">相对电平</span></div>
+        <div class="metric-value" id="level"><span id="levelNumber">—</span><span class="metric-unit">dBFS</span></div>
       </article>
     </section>
 
@@ -689,6 +804,11 @@
         <div class="panel-head-tools">
           <div class="panel-note" id="spectrumNote">青色：实时 · 粉色：峰值保持</div>
           <button class="marker-reset" id="resetMarker" type="button" hidden>重置测量点</button>
+          <button class="clear-chart" id="clearChart" type="button" aria-label="清空图表" title="清空图表">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+            </svg>
+          </button>
         </div>
       </div>
       <div class="chart-wrap">
@@ -696,11 +816,11 @@
         <svg id="spectrumOverlay" class="chart-overlay" preserveAspectRatio="none" aria-hidden="true"></svg>
         <form class="marker-editor" id="markerEditor" hidden>
           <label for="markerFrequency">输入频率</label>
-          <input id="markerFrequency" type="number" min="20" max="20000" step="0.1" inputmode="decimal">
+          <input id="markerFrequency" type="number" min="1" step="0.1" inputmode="decimal">
           <span>Hz</span>
           <button type="submit">定位</button>
         </form>
-        <div class="status" id="status">启动麦克风后开始采集<br>实时采集请使用 Chrome / Edge 等外部浏览器</div>
+        <div class="status" id="status"><span>启动麦克风后开始采集</span><small>实时采集请使用 Chrome / Edge 等外部浏览器</small></div>
       </div>
       <div class="shared-axis-wrap">
         <svg id="sharedAxis" preserveAspectRatio="none" role="img" aria-label="两张频谱图共用的频率横坐标"></svg>
@@ -715,17 +835,34 @@
       </div>
     </section>
 
-    <p class="footer-note">dBFS 是数字相对电平，未经校准不等于声压级 dB SPL。</p>
+    <footer class="footer-note">
+      <span>dBFS 是数字相对电平，未经校准不等于声压级 dB SPL。</span>
+      <a href="https://github.com/Arrow36/neon-noise" target="_blank" rel="noopener noreferrer">@Arrow36</a>
+    </footer>
   </div>
 
-  <script>
-    const FFT_SIZE = 32768;
+  <script type="module">
+    import {
+      FFT_SIZE,
+      MIN_HZ,
+      HISTORY_WINDOW_MS,
+      HISTORY_INTERVAL_MS,
+      clampGainDb,
+      gainDbToLinear,
+      createFrequencyConfig,
+      frequencyToRatio,
+      ratioToFrequency,
+      buildPixelBinMap,
+      aggregateColumnsMax,
+      frameBand,
+      recentFrames,
+      nextLifecycleState,
+      invalidateGeneration
+    } from "./spectrum-core.js";
+
     const MIN_DB = -115;
     const MAX_DB = -20;
-    const MIN_HZ = 20;
-    const MAX_HZ = 20000;
-    const HISTORY_INTERVAL_MS = 110;
-    const HISTORY_ROW_HEIGHT = 2;
+    const GAIN_SETTLE_MS = 90;
     const LOW_POWER_DEVICE = (window.matchMedia?.("(pointer: coarse)").matches ?? false) ||
       (navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4);
     const SPECTRUM_FRAME_INTERVAL_MS = LOW_POWER_DEVICE ? 66 : 50;
@@ -743,11 +880,10 @@
     const startButton = document.querySelector("#start");
     const analyzeButton = document.querySelector("#analyze");
     const analysisModeSelect = document.querySelector("#analysisMode");
-    const clearButton = document.querySelector("#clear");
     const gainSlider = document.querySelector("#gain");
     const gainValue = document.querySelector("#gainValue");
-    const frequencyValue = document.querySelector("#frequency");
-    const levelValue = document.querySelector("#level");
+    const frequencyValue = document.querySelector("#frequencyNumber");
+    const levelValue = document.querySelector("#levelNumber");
     const resolutionLabel = document.querySelector("#resolution");
     const statusLabel = document.querySelector("#status");
     const livePill = document.querySelector("#livePill");
@@ -756,6 +892,7 @@
     const spectrumTitle = document.querySelector("#spectrumTitle");
     const spectrumNote = document.querySelector("#spectrumNote");
     const resetMarkerButton = document.querySelector("#resetMarker");
+    const clearChartButton = document.querySelector("#clearChart");
     const markerEditor = document.querySelector("#markerEditor");
     const markerFrequencyInput = document.querySelector("#markerFrequency");
 
@@ -788,20 +925,38 @@
     let customMarkerHitArea = null;
     let customPointerState = null;
     let waterfallPointerState = null;
+    let lifecycleState = "idle";
+    let lifecycleToken = 0;
+    let resumeHistoryOnStart = false;
+    let releasingAudio = false;
     let running = false;
-    let captureStartedAt = 0;
-    let capturedElapsedMs = 0;
+    let historyAnchorTimestamp = 0;
+    let historyGeneration = 0;
+    let historyBlockUntil = 0;
+    let statusClearAt = 0;
+    let pendingFreshWindow = false;
+    let animationFrameId = 0;
+    let analysisWorker = null;
+    let analysisReject = null;
+    let audioConfig = createFrequencyConfig(48000, FFT_SIZE, FFT_SIZE / 2);
+    let hasAudioConfiguration = false;
     let lastHistoryAt = 0;
     let lastUiAt = 0;
     let lastSpectrumFrameAt = 0;
     let lastPeakAnalysisAt = 0;
     let liveDisplayPeaks = [];
     let traceBucketCache = null;
+    let waterfallBinMapCache = null;
+    let waterfallColumnLevels = null;
+    let spectrumBackgroundCache = null;
+    let waterfallBackgroundCache = null;
+    let spectrumPaintCache = null;
+    let waterfallPixelsCanvas = document.createElement("canvas");
+    let waterfallPixelsCtx = waterfallPixelsCanvas.getContext("2d");
+    let waterfallPixelsImage = null;
     let spectrumSize = { width: 1, height: 1, dpr: 1 };
     let waterfallSize = { width: 1, height: 1, dpr: 1 };
     let sharedAxisSize = { width: 1, height: 1 };
-    let waterfallBuffer = document.createElement("canvas");
-    let waterfallBufferCtx = waterfallBuffer.getContext("2d");
 
     function fitCanvas(canvas, context) {
       const dpr = Math.min(window.devicePixelRatio || 1, MAX_CANVAS_DPR);
@@ -829,19 +984,14 @@
       fitSvg(waterfallOverlay, waterfallSize);
       sharedAxisSize = fitSvg(sharedAxisSvg);
       traceBucketCache = null;
-
-      const previous = waterfallBuffer;
-      const next = document.createElement("canvas");
-      next.width = waterfallSize.width;
-      next.height = waterfallSize.height;
-      const nextCtx = next.getContext("2d");
-      nextCtx.fillStyle = "#03010d";
-      nextCtx.fillRect(0, 0, next.width, next.height);
-      if (previous.width > 1 && previous.height > 1) {
-        nextCtx.drawImage(previous, 0, 0, previous.width, previous.height, 0, 0, next.width, next.height);
-      }
-      waterfallBuffer = next;
-      waterfallBufferCtx = nextCtx;
+      waterfallBinMapCache = null;
+      waterfallColumnLevels = new Float32Array(waterfallSize.width);
+      spectrumBackgroundCache = null;
+      waterfallBackgroundCache = null;
+      spectrumPaintCache = null;
+      waterfallPixelsCanvas.width = waterfallSize.width;
+      waterfallPixelsCanvas.height = waterfallSize.height;
+      waterfallPixelsImage = waterfallPixelsCtx.createImageData(waterfallSize.width, waterfallSize.height);
 
       const displayData = showAnalysis && analysisSpectrum ? analysisSpectrum : spectrum;
       const rawPeaks = displayData ? findPeaks(displayData) : [];
@@ -854,31 +1004,28 @@
     }
 
     function getSampleRate() {
-      return audioContext?.sampleRate || 48000;
+      return audioConfig.sampleRate;
     }
 
     function getMaxFrequency() {
-      return Math.min(MAX_HZ, getSampleRate() / 2);
+      return audioConfig.maxHz;
     }
 
     function getActiveBinRange(dataLength = spectrum?.length || analyser?.frequencyBinCount || 0) {
-      if (!analyser || dataLength < 3) return { minBin: 1, maxBin: 0, binWidth: 1 };
-      const binWidth = getSampleRate() / analyser.fftSize;
+      if (dataLength < 2) return { minBin: 1, maxBin: 0, binWidth: audioConfig.binWidth };
       return {
-        minBin: Math.max(1, Math.ceil(MIN_HZ / binWidth)),
-        maxBin: Math.max(1, Math.min(dataLength - 2, Math.floor(getMaxFrequency() / binWidth))),
-        binWidth
+        minBin: 1,
+        maxBin: Math.max(1, Math.min(dataLength - 1, audioConfig.maxBin)),
+        binWidth: audioConfig.binWidth
       };
     }
 
     function frequencyToX(frequency, width) {
-      const maxFrequency = getMaxFrequency();
-      return Math.log(frequency / MIN_HZ) / Math.log(maxFrequency / MIN_HZ) * width;
+      return frequencyToRatio(frequency, audioConfig) * width;
     }
 
     function xToFrequency(x, width) {
-      const maxFrequency = getMaxFrequency();
-      return MIN_HZ * Math.pow(maxFrequency / MIN_HZ, x / width);
+      return ratioToFrequency(x / width, audioConfig);
     }
 
     function dbToY(db, height) {
@@ -888,9 +1035,13 @@
         (1 - Math.max(0, Math.min(1, normalized))) * plotHeight;
     }
 
-    function formatFrequency(frequency) {
+    function formatFrequencyNumber(frequency) {
       const digits = frequency < 1000 ? 1 : 0;
-      return `${frequency.toFixed(digits)} Hz`;
+      return frequency.toFixed(digits);
+    }
+
+    function formatFrequency(frequency) {
+      return `${formatFrequencyNumber(frequency)} Hz`;
     }
 
     function formatPeakFrequency(frequency) {
@@ -908,10 +1059,9 @@
     }
 
     function getLevelAtFrequency(data, frequency) {
-      if (!data || !analyser) return null;
-      const binWidth = getSampleRate() / analyser.fftSize;
-      const binPosition = clampFrequency(frequency) / binWidth;
-      const leftIndex = Math.max(0, Math.min(data.length - 1, Math.floor(binPosition)));
+      if (!data) return null;
+      const binPosition = Math.max(1, clampFrequency(frequency) / audioConfig.binWidth);
+      const leftIndex = Math.max(1, Math.min(data.length - 1, Math.floor(binPosition)));
       const rightIndex = Math.min(data.length - 1, leftIndex + 1);
       const mix = binPosition - leftIndex;
       const left = Number.isFinite(data[leftIndex]) ? data[leftIndex] : MIN_DB;
@@ -953,15 +1103,49 @@
       }, text);
     }
 
+    function syncSvgChildren(parent, desiredNodes) {
+      while (parent.childNodes.length > desiredNodes.length) parent.lastChild.remove();
+      desiredNodes.forEach((desired, index) => {
+        const current = parent.childNodes[index];
+        if (!current || current.nodeName !== desired.nodeName) {
+          if (current) current.replaceWith(desired);
+          else parent.append(desired);
+          return;
+        }
+        for (const attribute of [...current.attributes]) {
+          if (!desired.hasAttribute(attribute.name)) current.removeAttribute(attribute.name);
+        }
+        for (const attribute of desired.attributes) {
+          if (current.getAttribute(attribute.name) !== attribute.value) {
+            current.setAttribute(attribute.name, attribute.value);
+          }
+        }
+        if (desired.children.length) {
+          syncSvgChildren(current, [...desired.children]);
+        } else if (current.textContent !== desired.textContent) {
+          current.textContent = desired.textContent;
+        }
+      });
+    }
+
+    function getFrequencyMarks() {
+      if (!hasAudioConfiguration) return [];
+      const base = [1, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+      const max = getMaxFrequency();
+      const marks = base.filter(frequency => frequency < max * .985);
+      marks.push(max);
+      return [...new Set(marks)];
+    }
+
     function drawFrequencyGrid(context, width, height, withDbLabels) {
-      const frequencyMarks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
+      const frequencyMarks = getFrequencyMarks();
       context.save();
       context.lineWidth = 1;
 
       for (const frequency of frequencyMarks) {
         if (frequency > getMaxFrequency()) continue;
         const x = frequencyToX(frequency, width);
-        context.strokeStyle = frequency === 50 || frequency === 100
+        context.strokeStyle = frequency === 10 || frequency === 20 || frequency === 50 || frequency === 100
           ? "rgba(255, 60, 172, .24)"
           : "rgba(77, 246, 255, .12)";
         context.beginPath();
@@ -983,36 +1167,50 @@
       context.restore();
     }
 
+    function buildStaticBackground(width, height, withDbLabels) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      const background = context.createLinearGradient(0, 0, 0, height);
+      background.addColorStop(0, withDbLabels ? "#0b0320" : "#03010d");
+      background.addColorStop(1, "#02010a");
+      context.fillStyle = background;
+      context.fillRect(0, 0, width, height);
+      drawFrequencyGrid(context, width, height, withDbLabels);
+      if (!withDbLabels) {
+        for (let seconds = 0; seconds <= 20; seconds += 5) {
+          const y = seconds / 20 * height;
+          context.strokeStyle = "rgba(255, 255, 255, .1)";
+          context.beginPath();
+          context.moveTo(0, y);
+          context.lineTo(width, y);
+          context.stroke();
+        }
+      }
+      return canvas;
+    }
+
     function getTraceBucketInfo(width, dataLength) {
       const bucketCount = Math.max(2, Math.ceil(width));
       const range = getActiveBinRange(dataLength);
-      const cacheKey = `${bucketCount}:${dataLength}:${range.minBin}:${range.maxBin}:${range.binWidth}`;
+      const cacheKey = `${bucketCount}:${dataLength}:${audioConfig.sampleRate}:${audioConfig.fftSize}`;
       if (traceBucketCache?.key === cacheKey) return traceBucketCache;
-
-      const binCount = Math.max(0, range.maxBin - range.minBin + 1);
-      const bucketByBin = new Uint16Array(binCount);
-      for (let offset = 0; offset < binCount; offset++) {
-        const frequency = (range.minBin + offset) * range.binWidth;
-        bucketByBin[offset] = Math.max(0, Math.min(
-          bucketCount - 1,
-          Math.round(frequencyToX(frequency, width))
-        ));
-      }
-      traceBucketCache = { key: cacheKey, bucketCount, bucketByBin, ...range };
+      const mapConfig = { ...audioConfig, dataLength, maxBin: Math.min(dataLength - 1, audioConfig.maxBin) };
+      traceBucketCache = {
+        key: cacheKey,
+        bucketCount,
+        map: buildPixelBinMap(bucketCount, mapConfig),
+        levels: new Float32Array(bucketCount),
+        ...range
+      };
       return traceBucketCache;
     }
 
     function buildTracePoints(data, width, height) {
       const info = getTraceBucketInfo(width, data.length);
       if (info.maxBin < info.minBin) return [];
-      const levels = new Float32Array(info.bucketCount);
-      levels.fill(-Infinity);
-      for (let offset = 0; offset < info.bucketByBin.length; offset++) {
-        const value = data[info.minBin + offset];
-        if (!Number.isFinite(value)) continue;
-        const bucket = info.bucketByBin[offset];
-        if (value > levels[bucket]) levels[bucket] = value;
-      }
+      const levels = aggregateColumnsMax(data, info.map, MIN_DB, info.levels);
 
       const points = [];
       for (let x = 0; x < levels.length; x++) {
@@ -1028,7 +1226,7 @@
     }
 
     function drawTrace(context, data, color, lineWidth, glow, fill) {
-      if (!data || !analyser) return;
+      if (!data) return;
       const { width, height } = spectrumSize;
       const points = buildTracePoints(data, width, height);
       if (!points.length) return;
@@ -1063,8 +1261,8 @@
       }
 
       customMarkerHitArea = null;
-      if (!displayData || !analyser) {
-        spectrumOverlay.replaceChildren(...nodes);
+      if (!displayData) {
+        syncSvgChildren(spectrumOverlay, nodes);
         return;
       }
 
@@ -1239,18 +1437,14 @@
         }
       }
       spectrumCtx.restore();
-      spectrumOverlay.replaceChildren(...nodes);
+      syncSvgChildren(spectrumOverlay, nodes);
     }
 
     function drawSpectrum(displayData = spectrum, peaks = []) {
       const { width, height } = spectrumSize;
       spectrumCtx.clearRect(0, 0, width, height);
-      const background = spectrumCtx.createLinearGradient(0, 0, 0, height);
-      background.addColorStop(0, "#0b0320");
-      background.addColorStop(1, "#02010a");
-      spectrumCtx.fillStyle = background;
-      spectrumCtx.fillRect(0, 0, width, height);
-      drawFrequencyGrid(spectrumCtx, width, height, true);
+      if (!spectrumBackgroundCache) spectrumBackgroundCache = buildStaticBackground(width, height, true);
+      spectrumCtx.drawImage(spectrumBackgroundCache, 0, 0);
 
       if (!displayData) {
         renderSpectrumOverlay(null, [], width, height);
@@ -1259,22 +1453,29 @@
       if (!showAnalysis) {
         drawTrace(spectrumCtx, peakHold, "rgba(255, 60, 172, .78)", 1.1, "#ff3cac", null);
       }
-      const fill = spectrumCtx.createLinearGradient(0, 0, 0, height);
-      fill.addColorStop(0, showAnalysis ? "rgba(255, 208, 110, .24)" : "rgba(77, 246, 255, .22)");
-      fill.addColorStop(.58, "rgba(116, 65, 205, .1)");
-      fill.addColorStop(1, "rgba(8, 2, 24, 0)");
-      const traceGradient = spectrumCtx.createLinearGradient(0, 0, width, 0);
-      traceGradient.addColorStop(0, showAnalysis ? "#ffd06e" : "#4df6ff");
-      traceGradient.addColorStop(.54, showAnalysis ? "#ff77c7" : "#b875ff");
-      traceGradient.addColorStop(1, showAnalysis ? "#4df6ff" : "#ffcf62");
-      drawTrace(spectrumCtx, displayData, traceGradient, showAnalysis ? 2.2 : 1.65, showAnalysis ? "#ffb64d" : "#4df6ff", fill);
+      const paintKey = `${width}:${height}:${showAnalysis}`;
+      if (spectrumPaintCache?.key !== paintKey) {
+        const fill = spectrumCtx.createLinearGradient(0, 0, 0, height);
+        fill.addColorStop(0, showAnalysis ? "rgba(255, 208, 110, .24)" : "rgba(77, 246, 255, .22)");
+        fill.addColorStop(.58, "rgba(116, 65, 205, .1)");
+        fill.addColorStop(1, "rgba(8, 2, 24, 0)");
+        const traceGradient = spectrumCtx.createLinearGradient(0, 0, width, 0);
+        traceGradient.addColorStop(0, showAnalysis ? "#ffd06e" : "#4df6ff");
+        traceGradient.addColorStop(.54, showAnalysis ? "#ff77c7" : "#b875ff");
+        traceGradient.addColorStop(1, showAnalysis ? "#4df6ff" : "#ffcf62");
+        spectrumPaintCache = { key: paintKey, fill, traceGradient };
+      }
+      drawTrace(spectrumCtx, displayData, spectrumPaintCache.traceGradient, showAnalysis ? 2.2 : 1.65, showAnalysis ? "#ffb64d" : "#4df6ff", spectrumPaintCache.fill);
 
       renderSpectrumOverlay(displayData, peaks, width, height);
     }
 
     function formatAxisFrequency(frequency) {
-      if (frequency >= 1000) return `${frequency / 1000}k`;
-      return String(frequency);
+      if (frequency >= 1000) {
+        const khz = frequency / 1000;
+        return `${Number.isInteger(khz) ? khz : khz.toFixed(khz < 10 ? 2 : 1)}k`;
+      }
+      return Number.isInteger(frequency) ? String(frequency) : frequency.toFixed(1);
     }
 
     function getAxisLabelLayout(frequency, index, marks, width, fontSize) {
@@ -1283,7 +1484,7 @@
       const isFirst = index === 0;
       const isLast = index === marks.length - 1;
       const rawX = frequencyToX(frequency, width);
-      const x = isFirst ? 8 : isLast ? width - 8 : rawX;
+      const x = rawX;
       const anchor = isFirst ? "start" : isLast ? "end" : "middle";
       const left = anchor === "start" ? x : anchor === "end" ? x - estimatedWidth : x - estimatedWidth / 2;
       const right = anchor === "start" ? x + estimatedWidth : anchor === "end" ? x : x + estimatedWidth / 2;
@@ -1295,15 +1496,13 @@
       const compact = width < 520;
       const axisY = 15;
       const fontSize = compact ? 11 : 12;
-      const labelGap = compact ? 7 : 9;
-      const majorFrequencies = new Set([20, 100, 1000, 10000, 20000]);
-      const frequencyMarks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]
-        .filter(frequency => frequency <= getMaxFrequency());
+      const labelGap = compact ? 0 : 9;
+      const majorFrequencies = new Set([1, 20, 100, 1000, 10000, 20000]);
+      const frequencyMarks = getFrequencyMarks();
       sharedAxisSvg.classList.toggle("compact", compact);
 
       const nodes = [
-        svgText("FREQUENCY", 8, 1, "shared-axis-caption"),
-        svgText("Hz", width - 8, 1, "shared-axis-unit", "end"),
+        svgText("FREQUENCY / Hz", 0, 1, "shared-axis-caption"),
         svgNode("line", {
           class: "shared-axis-line",
           x1: 0,
@@ -1318,12 +1517,13 @@
       const labelLayouts = frequencyMarks.map((frequency, index) =>
         getAxisLabelLayout(frequency, index, frequencyMarks, width, fontSize)
       );
-      const lastLabel = labelLayouts.at(-1);
+      const mainEndLayout = labelLayouts[frequencyMarks.indexOf(20000)];
       let previousLabelRight = -Infinity;
 
       frequencyMarks.forEach((frequency, index) => {
         const isMajor = majorFrequencies.has(frequency);
-        const isFocusFrequency = frequency === 50 || frequency === 100;
+        const showCompactLabel = width >= 320 || isMajor;
+        const isFocusFrequency = frequency === 20 || frequency === 50 || frequency === 100;
         const layout = labelLayouts[index];
         const tickColor = isFocusFrequency
           ? "rgba(255, 60, 172, .8)"
@@ -1342,9 +1542,10 @@
         }));
 
         const overlapsPrevious = layout.left < previousLabelRight + labelGap;
-        const overlapsLast = index < labelLayouts.length - 1 &&
-          layout.right + labelGap > lastLabel.left;
-        if (!overlapsPrevious && !overlapsLast || index === labelLayouts.length - 1) {
+        const overlapsMainEnd = mainEndLayout && frequency !== 20000 && frequency < 20000 &&
+          layout.right + labelGap > mainEndLayout.left &&
+          layout.left < mainEndLayout.right + labelGap;
+        if (frequency !== 1 && showCompactLabel && index < labelLayouts.length - 1 && !overlapsPrevious && !overlapsMainEnd) {
           nodes.push(svgText(
             layout.text,
             layout.x,
@@ -1373,7 +1574,7 @@
           svgText(formatFrequency(frequency), labelX, axisY + 29, "shared-axis-custom", "middle")
         );
       }
-      sharedAxisSvg.replaceChildren(...nodes);
+      syncSvgChildren(sharedAxisSvg, nodes);
     }
 
     function colorForLevel(db) {
@@ -1399,37 +1600,52 @@
       return stops.at(-1)[1];
     }
 
-    function pushWaterfallRow(timestamp = performance.now()) {
-      if (!spectrum || !analyser) return;
-      const width = waterfallBuffer.width;
-      const height = waterfallBuffer.height;
-      const rowHeight = Math.min(HISTORY_ROW_HEIGHT, height);
-      waterfallBufferCtx.drawImage(
-        waterfallBuffer,
-        0, 0, width, Math.max(1, height - rowHeight),
-        0, rowHeight, width, Math.max(1, height - rowHeight)
-      );
-
-      const image = waterfallBufferCtx.createImageData(width, rowHeight);
-      const binWidth = getSampleRate() / analyser.fftSize;
-      for (let x = 0; x < width; x++) {
-        const frequency = xToFrequency(x, width);
-        const bin = Math.max(0, Math.min(spectrum.length - 1, Math.round(frequency / binWidth)));
-        const [r, g, b] = colorForLevel(spectrum[bin]);
-        for (let row = 0; row < rowHeight; row++) {
-          const index = (row * width + x) * 4;
-          image.data[index] = r;
-          image.data[index + 1] = g;
-          image.data[index + 2] = b;
-          image.data[index + 3] = 255;
-        }
+    const COLOR_LUT_SIZE = 1024;
+    const COLOR_LUT = (() => {
+      const table = new Uint8ClampedArray(COLOR_LUT_SIZE * 3);
+      for (let index = 0; index < COLOR_LUT_SIZE; index++) {
+        const db = MIN_DB + index / (COLOR_LUT_SIZE - 1) * (MAX_DB - MIN_DB);
+        const color = colorForLevel(db);
+        table[index * 3] = color[0];
+        table[index * 3 + 1] = color[1];
+        table[index * 3 + 2] = color[2];
       }
-      waterfallBufferCtx.putImageData(image, 0, 0);
+      return table;
+    })();
 
-      const captureTimestamp = capturedElapsedMs + Math.max(0, timestamp - captureStartedAt);
+    function getWaterfallBinMap(dataLength) {
+      const width = waterfallSize.width;
+      const key = `${width}:${dataLength}:${audioConfig.sampleRate}:${audioConfig.fftSize}`;
+      if (waterfallBinMapCache?.key === key) return waterfallBinMapCache.map;
+      const config = { ...audioConfig, dataLength, maxBin: Math.min(dataLength - 1, audioConfig.maxBin) };
+      waterfallBinMapCache = { key, map: buildPixelBinMap(width, config) };
+      return waterfallBinMapCache.map;
+    }
+
+    function ensureWaterfallRow(frame) {
+      const width = waterfallSize.width;
+      if (frame.rowPixels?.length === width * 4) return frame.rowPixels;
+      const levels = aggregateColumnsMax(frame.data, getWaterfallBinMap(frame.data.length), MIN_DB, waterfallColumnLevels);
+      const pixels = new Uint8ClampedArray(width * 4);
+      for (let x = 0; x < width; x++) {
+        const normalized = Math.max(0, Math.min(1, (levels[x] - MIN_DB) / (MAX_DB - MIN_DB)));
+        const colorIndex = Math.round(normalized * (COLOR_LUT_SIZE - 1)) * 3;
+        const pixelIndex = x * 4;
+        pixels[pixelIndex] = COLOR_LUT[colorIndex];
+        pixels[pixelIndex + 1] = COLOR_LUT[colorIndex + 1];
+        pixels[pixelIndex + 2] = COLOR_LUT[colorIndex + 2];
+        pixels[pixelIndex + 3] = 255;
+      }
+      frame.rowPixels = pixels;
+      return pixels;
+    }
+
+    function pushWaterfallRow(timestamp = performance.now()) {
+      if (!spectrum || timestamp < historyBlockUntil || lastSpectrumFrameAt < historyBlockUntil) return;
       const storedBinCount = Math.min(spectrum.length, getAnalysisBinLimit() + 1);
-      historyFrames.push({ timestamp: captureTimestamp, data: spectrum.slice(0, storedBinCount) });
-      const cutoff = captureTimestamp - 20000;
+      historyFrames.push({ timestamp, data: spectrum.slice(0, storedBinCount), generation: historyGeneration });
+      historyAnchorTimestamp = timestamp;
+      const cutoff = timestamp - HISTORY_WINDOW_MS;
       while (historyFrames.length && historyFrames[0].timestamp < cutoff) {
         historyFrames.shift();
       }
@@ -1462,45 +1678,47 @@
           "stroke-dasharray": CUSTOM_GUIDE_DASH.join(" ")
         }));
       }
-      waterfallOverlay.replaceChildren(...nodes);
+      syncSvgChildren(waterfallOverlay, nodes);
     }
 
-    function drawWaterfall() {
+    function drawWaterfall(anchorTimestamp = historyAnchorTimestamp || historyFrames.at(-1)?.timestamp || performance.now()) {
       const { width, height } = waterfallSize;
       waterfallCtx.clearRect(0, 0, width, height);
-      waterfallCtx.fillStyle = "#03010d";
-      waterfallCtx.fillRect(0, 0, width, height);
+      if (!waterfallBackgroundCache) waterfallBackgroundCache = buildStaticBackground(width, height, false);
+      waterfallCtx.drawImage(waterfallBackgroundCache, 0, 0);
       waterfallCtx.imageSmoothingEnabled = false;
-      waterfallCtx.drawImage(waterfallBuffer, 0, 0, waterfallBuffer.width, waterfallBuffer.height, 0, 0, width, height);
-      drawFrequencyGrid(waterfallCtx, width, height, false);
-
-      const secondsVisible = 20;
-      waterfallCtx.save();
-      for (let seconds = 0; seconds <= secondsVisible; seconds += 5) {
-        const y = seconds / secondsVisible * height;
-        waterfallCtx.strokeStyle = "rgba(255, 255, 255, .1)";
-        waterfallCtx.beginPath();
-        waterfallCtx.moveTo(0, y);
-        waterfallCtx.lineTo(width, y);
-        waterfallCtx.stroke();
+      waterfallPixelsImage.data.fill(0);
+      for (const frame of historyFrames) {
+        const band = frameBand(frame.timestamp, anchorTimestamp, height);
+        if (!band || band.bottom <= band.top) continue;
+        const row = ensureWaterfallRow(frame);
+        const firstRow = Math.max(0, Math.floor(band.top));
+        const lastRow = Math.min(height - 1, Math.max(firstRow, Math.ceil(band.bottom) - 1));
+        for (let y = firstRow; y <= lastRow; y++) {
+          waterfallPixelsImage.data.set(row, y * width * 4);
+        }
       }
-      waterfallCtx.restore();
+      waterfallPixelsCtx.putImageData(waterfallPixelsImage, 0, 0);
+      waterfallCtx.drawImage(waterfallPixelsCanvas, 0, 0);
       renderWaterfallOverlay(width, height);
-      historyWindowLabel.textContent = "TIME ↓ · 20 秒窗口";
+      historyWindowLabel.textContent = "TIME ↓ · 真实 20 秒窗口 · 缺口留空";
     }
 
     function findPeaks(data) {
-      if (!analyser) return [];
+      if (!data) return [];
       const { minBin, maxBin, binWidth } = getActiveBinRange(data.length);
       const candidates = [];
-      for (let i = Math.max(2, minBin); i <= Math.min(data.length - 3, maxBin); i++) {
+      for (let i = minBin; i <= Math.min(data.length - 1, maxBin); i++) {
         const frequency = i * binWidth;
         if (data[i] < -98) continue;
-        if (data[i] > data[i - 1] && data[i] >= data[i + 1] &&
-            data[i] > data[i - 2] && data[i] >= data[i + 2]) {
-          const denominator = data[i - 1] - 2 * data[i] + data[i + 1];
-          const offset = denominator === 0 ? 0 :
-            0.5 * (data[i - 1] - data[i + 1]) / denominator;
+        const left = i > minBin ? data[i - 1] : MIN_DB;
+        const right = i < maxBin ? data[i + 1] : MIN_DB;
+        const farLeft = i > minBin + 1 ? data[i - 2] : MIN_DB;
+        const farRight = i < maxBin - 1 ? data[i + 2] : MIN_DB;
+        if (data[i] > left && data[i] >= right && data[i] > farLeft && data[i] >= farRight) {
+          const denominator = left - 2 * data[i] + right;
+          const offset = i === minBin || i === maxBin || denominator === 0 ? 0 :
+            Math.max(-1, Math.min(1, 0.5 * (left - right) / denominator));
           candidates.push({ frequency: (i + offset) * binWidth, db: data[i] });
         }
       }
@@ -1606,141 +1824,9 @@
       }
     }
 
-    function buildAverageSpectrum(frames) {
-      const average = new Float32Array(spectrum.length);
-      average.fill(MIN_DB);
-      const powerSums = new Float64Array(spectrum.length);
-      const binLimit = getAnalysisBinLimit();
-      for (const frame of frames) {
-        for (let i = 0; i <= binLimit; i++) {
-          const db = Number.isFinite(frame.data[i]) ? frame.data[i] : MIN_DB;
-          powerSums[i] += Math.pow(10, db / 10);
-        }
-      }
-      for (let i = 0; i <= binLimit; i++) {
-        average[i] = 10 * Math.log10(Math.max(1e-14, powerSums[i] / frames.length));
-      }
-      return average;
-    }
-
     function getAnalysisBinLimit() {
-      if (!analyser || !spectrum) return 0;
+      if (!spectrum) return 0;
       return getActiveBinRange(spectrum.length).maxBin;
-    }
-
-    async function buildPercentileSpectrum(frames, percentile) {
-      const result = new Float32Array(spectrum.length);
-      result.fill(MIN_DB);
-      const values = new Float32Array(frames.length);
-      const binLimit = getAnalysisBinLimit();
-      const position = (frames.length - 1) * percentile;
-      const lowerIndex = Math.floor(position);
-      const upperIndex = Math.ceil(position);
-      const mix = position - lowerIndex;
-
-      for (let i = 0; i <= binLimit; i++) {
-        for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
-          const value = frames[frameIndex].data[i];
-          values[frameIndex] = Number.isFinite(value) ? value : MIN_DB;
-        }
-        values.sort();
-        result[i] = values[lowerIndex] + (values[upperIndex] - values[lowerIndex]) * mix;
-        if (i > 0 && i % (LOW_POWER_DEVICE ? 256 : 512) === 0) {
-          await new Promise(resolve => setTimeout(resolve, 0));
-        }
-      }
-      return result;
-    }
-
-    function buildMaximumSpectrum(frames) {
-      const result = new Float32Array(spectrum.length);
-      result.fill(MIN_DB);
-      const binLimit = getAnalysisBinLimit();
-      for (const frame of frames) {
-        for (let i = 0; i <= binLimit; i++) {
-          const value = Number.isFinite(frame.data[i]) ? frame.data[i] : MIN_DB;
-          if (value > result[i]) result[i] = value;
-        }
-      }
-      return result;
-    }
-
-    function getLocalSpectralMedian(data, index, binWidth, binLimit) {
-      const frequency = Math.max(MIN_HZ, index * binWidth);
-      const span = Math.max(6, Math.min(900, Math.round(frequency * 0.09 / binWidth)));
-      const guard = Math.max(2, Math.min(span - 2, Math.round(frequency * 0.008 / binWidth)));
-      const start = Math.max(1, index - span);
-      const end = Math.min(binLimit, index + span);
-      const step = Math.max(1, Math.floor((end - start + 1) / 36));
-      const neighbors = [];
-      for (let i = start; i <= end; i += step) {
-        if (Math.abs(i - index) <= guard) continue;
-        const value = data[i];
-        if (Number.isFinite(value)) neighbors.push(value);
-      }
-      if (!neighbors.length) return MIN_DB;
-      neighbors.sort((a, b) => a - b);
-      const middle = Math.floor(neighbors.length / 2);
-      return neighbors.length % 2
-        ? neighbors[middle]
-        : (neighbors[middle - 1] + neighbors[middle]) / 2;
-    }
-
-    function buildNoiseSpectrum(frames) {
-      const meanSpectrum = buildAverageSpectrum(frames);
-      const binWidth = getSampleRate() / analyser.fftSize;
-      const binLimit = getAnalysisBinLimit();
-      const prominentCandidates = [];
-
-      for (let i = 2; i < binLimit - 1; i++) {
-        const db = meanSpectrum[i];
-        if (db < -100 || db <= meanSpectrum[i - 1] || db < meanSpectrum[i + 1]) continue;
-        const localFloor = getLocalSpectralMedian(meanSpectrum, i, binWidth, binLimit);
-        const prominence = db - localFloor;
-        if (prominence < 3.5) continue;
-        prominentCandidates.push({ index: i, db, prominence });
-      }
-
-      prominentCandidates.sort((a, b) =>
-        (b.prominence + (b.db + 100) * 0.03) - (a.prominence + (a.db + 100) * 0.03)
-      );
-
-      const scored = prominentCandidates.slice(0, 80).map(candidate => {
-        let appearances = 0;
-        for (const frame of frames) {
-          let frameDb = MIN_DB;
-          for (let offset = -2; offset <= 2; offset++) {
-            const value = frame.data[candidate.index + offset];
-            if (Number.isFinite(value) && value > frameDb) frameDb = value;
-          }
-          const frameFloor = getLocalSpectralMedian(frame.data, candidate.index, binWidth, binLimit);
-          if (frameDb >= -100 && frameDb - frameFloor >= 3.5) appearances++;
-        }
-        const occurrence = appearances / frames.length;
-        const denominator = meanSpectrum[candidate.index - 1] -
-          2 * meanSpectrum[candidate.index] + meanSpectrum[candidate.index + 1];
-        const offset = denominator === 0 ? 0 : Math.max(-1, Math.min(1,
-          0.5 * (meanSpectrum[candidate.index - 1] - meanSpectrum[candidate.index + 1]) / denominator
-        ));
-        return {
-          frequency: (candidate.index + offset) * binWidth,
-          db: candidate.db,
-          prominence: candidate.prominence,
-          occurrence,
-          score: candidate.prominence * (0.35 + occurrence * 0.65) + Math.max(0, candidate.db + 100) * 0.03
-        };
-      }).filter(candidate => candidate.occurrence >= 0.08);
-
-      scored.sort((a, b) => b.score - a.score);
-      const selected = [];
-      for (const candidate of scored) {
-        const separation = Math.max(15, candidate.frequency * 0.012);
-        if (selected.every(peak => Math.abs(peak.frequency - candidate.frequency) >= separation)) {
-          selected.push(candidate);
-        }
-        if (selected.length === 5) break;
-      }
-      return { spectrum: meanSpectrum, peaks: selected };
     }
 
     const ANALYSIS_MODES = {
@@ -1762,18 +1848,59 @@
       }
     };
 
-    async function computeHistoryAnalysis(frames, mode) {
-      if (mode === "median") {
-        return { spectrum: await buildPercentileSpectrum(frames, 0.5), peaks: null };
+    function cancelAnalysis(reason = "分析已取消") {
+      analysisComputeToken = invalidateGeneration(analysisComputeToken);
+      if (analysisWorker) {
+        analysisWorker.terminate();
+        analysisWorker = null;
       }
-      if (mode === "maximum") return { spectrum: buildMaximumSpectrum(frames), peaks: null };
-      if (mode === "noise") return buildNoiseSpectrum(frames);
-      return { spectrum: buildAverageSpectrum(frames), peaks: null };
+      if (analysisReject) {
+        analysisReject(new DOMException(reason, "AbortError"));
+        analysisReject = null;
+      }
+    }
+
+    function computeHistoryAnalysis(frames, mode, token) {
+      cancelAnalysis("已有分析被新任务替代");
+      analysisComputeToken = token;
+      const binCount = Math.min(...frames.map(frame => frame.data.length));
+      const packed = new Float32Array(frames.length * binCount);
+      frames.forEach((frame, index) => packed.set(frame.data.subarray(0, binCount), index * binCount));
+      analysisWorker = new Worker("./analysis-worker.js", { type: "module" });
+      return new Promise((resolve, reject) => {
+        analysisReject = reject;
+        analysisWorker.onmessage = event => {
+          if (event.data.id !== token) return;
+          analysisReject = null;
+          analysisWorker?.terminate();
+          analysisWorker = null;
+          if (event.data.error) {
+            reject(new Error(event.data.error));
+            return;
+          }
+          resolve({ spectrum: new Float32Array(event.data.spectrumBuffer), peaks: event.data.peaks });
+        };
+        analysisWorker.onerror = event => {
+          analysisReject = null;
+          analysisWorker?.terminate();
+          analysisWorker = null;
+          reject(new Error(event.message || "历史分析 Worker 运行失败"));
+        };
+        analysisWorker.postMessage({
+          id: token,
+          mode,
+          framesBuffer: packed.buffer,
+          frameCount: frames.length,
+          binCount,
+          outputLength: spectrum.length,
+          binLimit: Math.min(getAnalysisBinLimit(), binCount - 1),
+          binWidth: audioConfig.binWidth
+        }, [packed.buffer]);
+      });
     }
 
     function getRecentHistoryFrames() {
-      const latestTimestamp = historyFrames.at(-1)?.timestamp ?? 0;
-      return historyFrames.filter(frame => latestTimestamp - frame.timestamp <= 20000);
+      return recentFrames(historyFrames, historyAnchorTimestamp || historyFrames.at(-1)?.timestamp || performance.now());
     }
 
     function updateAnalyzeAvailability() {
@@ -1840,11 +1967,20 @@
     async function calculateSelectedAnalysis() {
       const frames = getRecentHistoryFrames();
       if (!frames.length) {
+        if (lifecycleState === "analyzing") {
+          lifecycleState = "paused";
+          renderLifecycle();
+        }
         updateAnalyzeAvailability();
         return;
       }
 
-      const computeToken = ++analysisComputeToken;
+      const computeToken = invalidateGeneration(analysisComputeToken);
+      const sourceGeneration = historyGeneration;
+      lifecycleState = lifecycleState === "running"
+        ? nextLifecycleState(lifecycleState, "ANALYZE")
+        : "analyzing";
+      renderLifecycle();
       const previousSpectrum = getDisplayedSpectrum()
         ? new Float32Array(getDisplayedSpectrum())
         : null;
@@ -1852,26 +1988,34 @@
       analyzeButton.disabled = true;
       analysisModeSelect.disabled = true;
       analyzeButton.textContent = "正在计算…";
-      await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-
-      const result = await computeHistoryAnalysis(frames, currentAnalysisMode);
-      if (computeToken !== analysisComputeToken) {
-        analysisModeSelect.disabled = false;
-        updateAnalyzeAvailability();
-        return;
+      try {
+        const result = await computeHistoryAnalysis(frames, currentAnalysisMode, computeToken);
+        if (computeToken !== analysisComputeToken || sourceGeneration !== historyGeneration) return;
+        analysisSpectrum = result.spectrum;
+        analysisPeaks = result.peaks || findPeaks(analysisSpectrum);
+        showAnalysis = true;
+        lifecycleState = nextLifecycleState(lifecycleState, "DONE");
+        renderLifecycle();
+        const coverageMs = frames.length > 1 ? frames.at(-1).timestamp - frames[0].timestamp : 0;
+        const coveredSeconds = Math.min(20, Math.max(HISTORY_INTERVAL_MS / 1000, coverageMs / 1000));
+        const mode = ANALYSIS_MODES[currentAnalysisMode];
+        spectrumTitle.textContent = mode.title;
+        spectrumNote.textContent = `${mode.note} · 有效采样跨度 ${coveredSeconds.toFixed(1)} 秒`;
+        analyzeButton.textContent = "返回实时频谱";
+        await transitionAnalysisSpectrum(previousSpectrum, analysisSpectrum, analysisPeaks);
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          setStatus("历史分析失败", error?.message || String(error));
+          lifecycleState = audioContext ? "paused" : "stopped";
+          renderLifecycle();
+        }
+      } finally {
+        if (computeToken === analysisComputeToken) {
+          analyzeButton.disabled = false;
+          analysisModeSelect.disabled = false;
+          updateAnalyzeAvailability();
+        }
       }
-      analysisSpectrum = result.spectrum;
-      analysisPeaks = result.peaks || findPeaks(analysisSpectrum);
-      showAnalysis = true;
-      const coverageMs = frames.length > 1 ? frames.at(-1).timestamp - frames[0].timestamp : 0;
-      const coveredSeconds = Math.min(20, Math.max(HISTORY_INTERVAL_MS / 1000, coverageMs / 1000));
-      const mode = ANALYSIS_MODES[currentAnalysisMode];
-      spectrumTitle.textContent = mode.title;
-      spectrumNote.textContent = `${mode.note} · 最近 ${coveredSeconds.toFixed(1)} 秒`;
-      analyzeButton.textContent = "返回实时频谱";
-      await transitionAnalysisSpectrum(previousSpectrum, analysisSpectrum, analysisPeaks);
-      analyzeButton.disabled = false;
-      analysisModeSelect.disabled = false;
     }
 
     async function toggleHistoryAnalysis() {
@@ -1887,20 +2031,25 @@
         if (running && analyser) {
           const stoppedAt = performance.now();
           analyser.getFloatFrequencyData(spectrum);
-          updatePeakHold(lastSpectrumFrameAt ? stoppedAt - lastSpectrumFrameAt : SPECTRUM_FRAME_INTERVAL_MS);
+          if (stoppedAt >= historyBlockUntil) {
+            updatePeakHold(lastSpectrumFrameAt ? stoppedAt - lastSpectrumFrameAt : SPECTRUM_FRAME_INTERVAL_MS);
+          }
           pushWaterfallRow(stoppedAt);
+          historyAnchorTimestamp = historyFrames.at(-1)?.timestamp || stoppedAt;
           drawWaterfall();
-          capturedElapsedMs += stoppedAt - captureStartedAt;
-          running = false;
-          setLiveState(false);
+          await releaseAudioResources({ nextState: "analyzing" });
         }
         await calculateSelectedAnalysis();
       }
     }
 
     function animate(now) {
-      requestAnimationFrame(animate);
       if (!running || !analyser) return;
+      animationFrameId = requestAnimationFrame(animate);
+      if (statusClearAt && now >= statusClearAt) {
+        statusClearAt = 0;
+        statusLabel.style.display = "none";
+      }
       const spectrumFrameDue = !lastSpectrumFrameAt ||
         now - lastSpectrumFrameAt >= SPECTRUM_FRAME_INTERVAL_MS;
 
@@ -1910,11 +2059,21 @@
           : SPECTRUM_FRAME_INTERVAL_MS;
         lastSpectrumFrameAt = now;
         analyser.getFloatFrequencyData(spectrum);
-        updatePeakHold(elapsedMs);
-
-        if (!liveDisplayPeaks.length || now - lastPeakAnalysisAt >= PEAK_ANALYSIS_INTERVAL_MS) {
-          liveDisplayPeaks = stabilizePeakMarkers(findPeaks(spectrum), now);
-          lastPeakAnalysisAt = now;
+        if (now >= historyBlockUntil) {
+          if (pendingFreshWindow) {
+            peakHold.fill(MIN_DB);
+            stablePeakMarkers = [];
+            liveDisplayPeaks = [];
+            pendingFreshWindow = false;
+          }
+          updatePeakHold(elapsedMs);
+          if (!liveDisplayPeaks.length || now - lastPeakAnalysisAt >= PEAK_ANALYSIS_INTERVAL_MS) {
+            liveDisplayPeaks = stabilizePeakMarkers(findPeaks(spectrum), now);
+            lastPeakAnalysisAt = now;
+          }
+        } else {
+          peakHold.fill(MIN_DB);
+          liveDisplayPeaks = [];
         }
         drawSpectrum(spectrum, liveDisplayPeaks);
       }
@@ -1927,17 +2086,56 @@
 
       if (spectrumFrameDue && now - lastUiAt >= UI_INTERVAL_MS) {
         if (liveDisplayPeaks.length) {
-          frequencyValue.textContent = formatFrequency(liveDisplayPeaks[0].frequency);
-          levelValue.textContent = `${liveDisplayPeaks[0].db.toFixed(1)} dBFS`;
+          frequencyValue.textContent = formatFrequencyNumber(liveDisplayPeaks[0].frequency);
+          levelValue.textContent = liveDisplayPeaks[0].db.toFixed(1);
         }
         lastUiAt = now;
       }
     }
 
-    function setLiveState(isLive) {
-      livePill.classList.toggle("is-live", isLive);
-      liveText.textContent = isLive ? "RECORDING" : "PAUSED";
-      startButton.textContent = isLive ? "暂停采集" : "继续采集";
+    function startAnimationLoop() {
+      stopAnimationLoop();
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function stopAnimationLoop() {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
+
+    function renderLifecycle() {
+      running = lifecycleState === "running";
+      const live = running;
+      livePill.classList.toggle("is-live", live);
+      const labels = {
+        idle: ["STANDBY", "启动麦克风"],
+        starting: ["CONNECTING", "正在启动…"],
+        running: ["RECORDING", "暂停采集"],
+        paused: ["PAUSED", "继续采集"],
+        analyzing: ["ANALYZING", "继续采集"],
+        stopped: ["STOPPED", "启动麦克风"],
+        error: ["NO INPUT", "重试麦克风"]
+      };
+      const [pillText, buttonText] = labels[lifecycleState] || labels.idle;
+      liveText.textContent = pillText;
+      livePill.setAttribute("aria-label", `${pillText}，${buttonText}`);
+      livePill.title = `${pillText} · ${buttonText}`;
+      startButton.textContent = buttonText;
+      startButton.disabled = lifecycleState === "starting";
+      livePill.disabled = lifecycleState === "starting" || releasingAudio;
+    }
+
+    function setStatus(message, detail = "") {
+      statusLabel.replaceChildren();
+      const summary = document.createElement("span");
+      summary.textContent = message;
+      statusLabel.append(summary);
+      if (detail) {
+        const small = document.createElement("small");
+        small.textContent = detail;
+        statusLabel.append(small);
+      }
+      statusLabel.style.display = "grid";
     }
 
     function getMicrophoneConstraints() {
@@ -1950,43 +2148,156 @@
       };
     }
 
-    async function reconnectMicrophoneIfNeeded() {
+    async function reconnectMicrophoneIfNeeded(token) {
       const audioTracks = microphoneStream?.getAudioTracks() || [];
       const hasUsableTrack = audioTracks.some(track => track.readyState === "live" && !track.muted);
       if (hasUsableTrack) return;
 
       const replacementStream = await navigator.mediaDevices.getUserMedia(getMicrophoneConstraints());
+      if (token !== lifecycleToken || !audioContext) {
+        replacementStream.getTracks().forEach(track => track.stop());
+        throw new DOMException("连接已取消", "AbortError");
+      }
+      let replacementSource;
+      try {
+        replacementSource = audioContext.createMediaStreamSource(replacementStream);
+        replacementSource.connect(gainNode);
+      } catch (error) {
+        replacementStream.getTracks().forEach(track => track.stop());
+        throw error;
+      }
       microphoneSource?.disconnect();
       microphoneStream?.getTracks().forEach(track => track.stop());
       microphoneStream = replacementStream;
-      microphoneSource = audioContext.createMediaStreamSource(microphoneStream);
-      microphoneSource.connect(gainNode);
+      microphoneSource = replacementSource;
+      attachTrackLifecycle(replacementStream);
     }
 
-    function applyInputGain() {
-      const db = Number(gainSlider.value);
-      const linearGain = Math.pow(10, db / 20);
+    function applyInputGain({ reset = true } = {}) {
+      const db = clampGainDb(gainSlider.value);
+      gainSlider.value = String(db);
+      const linearGain = gainDbToLinear(db);
       gainValue.textContent = `${db >= 0 ? "+" : ""}${db} dB`;
       if (gainNode && audioContext) {
         gainNode.gain.setTargetAtTime(linearGain, audioContext.currentTime, 0.015);
       }
+      if (reset && spectrum) {
+        const fftWindowMs = (analyser?.fftSize || FFT_SIZE) / getSampleRate() * 1000;
+        historyBlockUntil = performance.now() + GAIN_SETTLE_MS + fftWindowMs;
+        pendingFreshWindow = true;
+        spectrum.fill(MIN_DB);
+        clearHistory(`输入增益已改为 ${db >= 0 ? "+" : ""}${db} dB，历史与峰值已重置`);
+      }
+    }
+
+    function attachTrackLifecycle(stream) {
+      for (const track of stream.getAudioTracks()) {
+        track.addEventListener("ended", () => {
+          if (releasingAudio || stream !== microphoneStream) return;
+          stopAnimationLoop();
+          lifecycleState = "error";
+          renderLifecycle();
+          setStatus("麦克风已断开", "可以重新连接设备后点击“重试麦克风”。");
+        }, { once: true });
+      }
+    }
+
+    function handleAudioContextStateChange() {
+      if (!audioContext || lifecycleState !== "running") return;
+      if (audioContext.state === "suspended" || audioContext.state === "interrupted") {
+        stopAnimationLoop();
+        lifecycleState = nextLifecycleState(lifecycleState, "INTERRUPT");
+        historyAnchorTimestamp = historyFrames.at(-1)?.timestamp || performance.now();
+        renderLifecycle();
+        setStatus("音频上下文已暂停", "返回前台后点击“继续采集”；缺失时段会在瀑布图中留空。");
+      }
+    }
+
+    async function releaseAudioResources({ nextState = "paused" } = {}) {
+      const token = ++lifecycleToken;
+      stopAnimationLoop();
+      cancelAnalysis("麦克风已停止");
+      running = false;
+      lifecycleState = nextState;
+      if (nextState === "paused" || nextState === "analyzing") resumeHistoryOnStart = true;
+      releasingAudio = true;
+      startButton.disabled = true;
+      livePill.disabled = true;
+      try { microphoneSource?.disconnect(); } catch (_) {}
+      try { gainNode?.disconnect(); } catch (_) {}
+      try { analyser?.disconnect(); } catch (_) {}
+      microphoneStream?.getTracks().forEach(track => track.stop());
+      const context = audioContext;
+      microphoneStream = undefined;
+      microphoneSource = undefined;
+      gainNode = undefined;
+      analyser = undefined;
+      audioContext = undefined;
+      if (context && context.state !== "closed") {
+        try { await context.close(); } catch (_) {}
+      }
+      releasingAudio = false;
+      if (token !== lifecycleToken) return;
+      analysisModeSelect.disabled = false;
+      updateAnalyzeAvailability();
+      renderLifecycle();
+    }
+
+    function refreshAudioConfiguration() {
+      const nextConfig = createFrequencyConfig(audioContext.sampleRate, analyser.fftSize, analyser.frequencyBinCount);
+      const incompatibleHistory = historyFrames.length && (
+        nextConfig.sampleRate !== audioConfig.sampleRate ||
+        nextConfig.fftSize !== audioConfig.fftSize ||
+        nextConfig.dataLength !== audioConfig.dataLength
+      );
+      audioConfig = nextConfig;
+      hasAudioConfiguration = true;
+      markerFrequencyInput.min = String(MIN_HZ);
+      markerFrequencyInput.max = String(audioConfig.maxHz);
+      traceBucketCache = null;
+      waterfallBinMapCache = null;
+      waterfallColumnLevels = new Float32Array(waterfallSize.width);
+      spectrumBackgroundCache = null;
+      waterfallBackgroundCache = null;
+      spectrumPaintCache = null;
+      customFrequency = customFrequency === null ? null : clampFrequency(customFrequency);
+      if (incompatibleHistory) clearHistory("实际采样率已改变，不兼容的历史与峰值已重置");
+      const windowMs = analyser.fftSize / audioContext.sampleRate * 1000;
+      resolutionLabel.replaceChildren(...[
+        `采样率 ${audioContext.sampleRate} Hz`,
+        `FFT ${analyser.fftSize}`,
+        `频点间距 ${audioConfig.binWidth.toFixed(2)} Hz`,
+        `分析窗 ${windowMs.toFixed(1)} ms`
+      ].map(value => {
+        const part = document.createElement("span");
+        part.textContent = value;
+        return part;
+      }));
+      drawSharedAxis();
+      drawWaterfall();
     }
 
     async function startOrToggleCapture() {
       if (audioContext) {
+        const token = ++lifecycleToken;
         try {
-          startButton.disabled = true;
           if (running) {
-            capturedElapsedMs += performance.now() - captureStartedAt;
-            running = false;
-            setLiveState(false);
+            historyAnchorTimestamp = historyFrames.at(-1)?.timestamp || performance.now();
             const pausedPeaks = stablePeakMarkers.length
               ? stablePeakMarkers
               : (spectrum ? findPeaks(spectrum) : []);
             drawSpectrum(spectrum, pausedPeaks);
+            drawWaterfall();
+            await releaseAudioResources({ nextState: "paused" });
+            setStatus("采集已暂停，麦克风已释放");
           } else {
+            cancelAnalysis("已恢复采集");
+            analysisModeSelect.disabled = false;
+            updateAnalyzeAvailability();
             if (audioContext.state !== "running") await audioContext.resume();
-            await reconnectMicrophoneIfNeeded();
+            if (token !== lifecycleToken) return;
+            await reconnectMicrophoneIfNeeded(token);
+            if (token !== lifecycleToken) return;
             if (showAnalysis) {
               analysisTransitionToken++;
               showAnalysis = false;
@@ -1994,40 +2305,60 @@
               spectrumNote.textContent = "青色：实时 · 粉色：峰值保持";
               updateAnalyzeAvailability();
             }
-            analysisComputeToken++;
-            running = true;
-            captureStartedAt = performance.now();
+            lifecycleState = "running";
             lastHistoryAt = 0;
             lastSpectrumFrameAt = 0;
             lastPeakAnalysisAt = 0;
             statusLabel.style.display = "none";
-            setLiveState(true);
+            renderLifecycle();
+            startAnimationLoop();
           }
         } catch (error) {
-          running = false;
-          setLiveState(false);
-          statusLabel.style.display = "grid";
-          statusLabel.innerHTML = `恢复麦克风失败：${error.message}<br><small>请检查浏览器麦克风权限后重试。</small>`;
-        } finally {
-          startButton.disabled = false;
+          if (error?.name === "AbortError" || token !== lifecycleToken) return;
+          lifecycleState = "error";
+          renderLifecycle();
+          setStatus("恢复麦克风失败", `${error?.message || error}。请检查浏览器麦克风权限后重试。`);
         }
         return;
       }
 
       try {
-        startButton.disabled = true;
-        statusLabel.style.display = "grid";
-        statusLabel.innerHTML = "正在请求麦克风权限…";
+        const token = ++lifecycleToken;
+        const continuingHistory = resumeHistoryOnStart;
+        if (continuingHistory) {
+          cancelAnalysis("已恢复采集");
+          analysisTransitionToken++;
+          showAnalysis = false;
+          analysisModeSelect.disabled = false;
+          spectrumTitle.textContent = "CURRENT SPECTRUM / 当前频谱";
+          spectrumNote.textContent = "青色：实时 · 粉色：峰值保持";
+          updateAnalyzeAvailability();
+        }
+        lifecycleState = "starting";
+        renderLifecycle();
+        setStatus("正在请求麦克风权限…");
+        if (!continuingHistory && (historyFrames.length || showAnalysis)) {
+          clearHistory("开始新的麦克风会话，旧历史与峰值已重置");
+        }
 
         if (!navigator.mediaDevices?.getUserMedia) {
           throw new Error("当前浏览器未开放麦克风接口，请使用 Chrome 或 Edge 打开此页面");
         }
 
         microphoneStream = await navigator.mediaDevices.getUserMedia(getMicrophoneConstraints());
+        if (token !== lifecycleToken) {
+          microphoneStream.getTracks().forEach(track => track.stop());
+          microphoneStream = undefined;
+          return;
+        }
+        attachTrackLifecycle(microphoneStream);
 
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) throw new Error("当前浏览器不支持 Web Audio API");
         audioContext = new AudioContextClass();
+        audioContext.addEventListener("statechange", handleAudioContextStateChange);
         await audioContext.resume();
+        if (token !== lifecycleToken) return;
         analyser = audioContext.createAnalyser();
         analyser.fftSize = FFT_SIZE;
         analyser.minDecibels = MIN_DB;
@@ -2040,28 +2371,28 @@
         microphoneSource = audioContext.createMediaStreamSource(microphoneStream);
         microphoneSource.connect(gainNode);
         gainNode.connect(analyser);
-        applyInputGain();
+        refreshAudioConfiguration();
+        applyInputGain({ reset: false });
+        historyBlockUntil = Math.max(historyBlockUntil,
+          performance.now() + analyser.fftSize / audioContext.sampleRate * 1000);
+        pendingFreshWindow = true;
+        resumeHistoryOnStart = false;
 
-        running = true;
-        capturedElapsedMs = 0;
-        captureStartedAt = performance.now();
+        lifecycleState = "running";
         lastHistoryAt = 0;
         lastUiAt = 0;
         lastSpectrumFrameAt = 0;
         lastPeakAnalysisAt = 0;
         liveDisplayPeaks = [];
-        startButton.disabled = false;
         statusLabel.style.display = "none";
-        setLiveState(true);
-        const binWidth = audioContext.sampleRate / analyser.fftSize;
-        resolutionLabel.textContent = `采样率 ${audioContext.sampleRate} Hz · FFT ${FFT_SIZE} · 分辨率 ${binWidth.toFixed(2)} Hz`;
+        renderLifecycle();
+        startAnimationLoop();
       } catch (error) {
-        startButton.disabled = false;
-        liveText.textContent = "NO INPUT";
         const permissionHint = error.name === "NotAllowedError"
           ? "麦克风权限被拒绝。请在浏览器地址栏的网站权限中允许麦克风。"
-          : error.message;
-        statusLabel.innerHTML = `${permissionHint}<br><small>ChatGPT 内置浏览器可能不支持麦克风，请改用外部浏览器。</small>`;
+          : error?.message || String(error);
+        await releaseAudioResources({ nextState: "error" });
+        setStatus(permissionHint, "已释放本次创建的资源，可直接重试。内置浏览器不支持时请改用 Chrome / Edge。");
       }
     }
 
@@ -2086,7 +2417,7 @@
     }
 
     function setCustomFrequency(frequency, closeEditor = true) {
-      if (!analyser || !getDisplayedSpectrum()) return;
+      if (!getDisplayedSpectrum()) return;
       customFrequency = clampFrequency(frequency);
       resetMarkerButton.hidden = false;
       markerFrequencyInput.value = customFrequency < 1000
@@ -2127,7 +2458,7 @@
     }
 
     function handleSpectrumPointerDown(event) {
-      if (!analyser || !getDisplayedSpectrum()) return;
+      if (!getDisplayedSpectrum()) return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
       const position = getSpectrumPointerPosition(event);
       const startedOnMarker = hitsCustomMarker(position.x, position.y);
@@ -2202,7 +2533,7 @@
     }
 
     function handleWaterfallPointerDown(event) {
-      if (!analyser || !historyFrames.length) return;
+      if (!historyFrames.length) return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
       const position = getWaterfallPointerPosition(event);
       waterfallPointerState = {
@@ -2244,12 +2575,16 @@
       if (waterfallPointerState?.id === event.pointerId) waterfallPointerState = null;
     }
 
-    function clearHistory() {
+    function clearHistory(message = "历史、分析结果和峰值保持已清空") {
       analysisTransitionToken++;
-      analysisComputeToken++;
-      waterfallBufferCtx.fillStyle = "#03010d";
-      waterfallBufferCtx.fillRect(0, 0, waterfallBuffer.width, waterfallBuffer.height);
+      cancelAnalysis(message);
+      if (lifecycleState === "analyzing") {
+        lifecycleState = audioContext ? "paused" : "stopped";
+        renderLifecycle();
+      }
+      historyGeneration = invalidateGeneration(historyGeneration);
       historyFrames = [];
+      historyAnchorTimestamp = performance.now();
       analysisSpectrum = undefined;
       analysisPeaks = [];
       showAnalysis = false;
@@ -2257,6 +2592,7 @@
       liveDisplayPeaks = [];
       lastPeakLabelUpdateAt = 0;
       lastPeakAnalysisAt = 0;
+      analysisModeSelect.disabled = false;
       updateAnalyzeAvailability();
       spectrumTitle.textContent = "CURRENT SPECTRUM / 当前频谱";
       spectrumNote.textContent = "青色：实时 · 粉色：峰值保持";
@@ -2264,15 +2600,33 @@
       drawWaterfall();
       drawSpectrum(spectrum, spectrum ? findPeaks(spectrum) : []);
       drawSharedAxis();
+      if (message) {
+        setStatus(message, "新的历史只会包含当前配置稳定后的数据。");
+        statusClearAt = running ? performance.now() + 1800 : 0;
+      }
+    }
+
+    function clearCharts() {
+      if (running && analyser && audioContext) {
+        historyBlockUntil = Math.max(historyBlockUntil,
+          performance.now() + analyser.fftSize / audioContext.sampleRate * 1000);
+        pendingFreshWindow = true;
+      }
+      if (spectrum) spectrum.fill(MIN_DB);
+      resetCustomMarker();
+      clearHistory("图表、历史和峰值保持已清空");
+      frequencyValue.textContent = "—";
+      levelValue.textContent = "—";
     }
 
     startButton.addEventListener("click", startOrToggleCapture);
+    livePill.addEventListener("click", startOrToggleCapture);
+    clearChartButton.addEventListener("click", clearCharts);
     analyzeButton.addEventListener("click", toggleHistoryAnalysis);
     analysisModeSelect.addEventListener("change", () => {
       currentAnalysisMode = analysisModeSelect.value;
       if (showAnalysis) calculateSelectedAnalysis();
     });
-    clearButton.addEventListener("click", clearHistory);
     resetMarkerButton.addEventListener("click", resetCustomMarker);
     markerEditor.addEventListener("submit", event => {
       event.preventDefault();
@@ -2302,10 +2656,10 @@
     waterfallCanvas.addEventListener("pointercancel", handleWaterfallPointerCancel);
     gainSlider.addEventListener("input", applyInputGain);
     window.addEventListener("resize", resizeCanvases);
-    applyInputGain();
+    applyInputGain({ reset: false });
     updateAnalyzeAvailability();
     resizeCanvases();
-    requestAnimationFrame(animate);
+    renderLifecycle();
   </script>
 </body>
 </html>
