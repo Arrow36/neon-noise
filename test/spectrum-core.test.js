@@ -16,6 +16,7 @@ import {
   frameBand,
   recentFrames,
   nextLifecycleState,
+  isGainLocked,
   invalidateGeneration
 } from "../spectrum-core.js";
 import { computeAnalysisPayload } from "../analysis-worker.js";
@@ -160,4 +161,11 @@ test("状态机覆盖初始化失败重试、分析取消与释放后继续", ()
   assert.equal(state, "paused");
   assert.equal(nextLifecycleState(state, "START"), "starting");
   assert.equal(invalidateGeneration(7), 8);
+});
+
+test("分析计算与结果展示期间锁定增益，返回实时视图后解锁", () => {
+  assert.equal(isGainLocked("running", false), false);
+  assert.equal(isGainLocked("analyzing", false), true);
+  assert.equal(isGainLocked("paused", true), true);
+  assert.equal(isGainLocked("paused", false), false);
 });

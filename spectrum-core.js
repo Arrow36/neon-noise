@@ -142,6 +142,10 @@ export function nextLifecycleState(state, event) {
   return table[state]?.[event] ?? state;
 }
 
+export function isGainLocked(state, showAnalysis) {
+  return state === "analyzing" || showAnalysis;
+}
+
 export function invalidateGeneration(generation) {
   return generation + 1;
 }

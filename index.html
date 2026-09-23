@@ -210,6 +210,7 @@
       cursor: pointer;
       touch-action: pan-x;
     }
+    input[type="range"]:disabled { cursor: not-allowed; opacity: .45; }
 
     input[type="range"]::-webkit-slider-thumb { width: 24px; height: 24px; }
 
@@ -857,6 +858,7 @@
       frameBand,
       recentFrames,
       nextLifecycleState,
+      isGainLocked,
       invalidateGeneration
     } from "./spectrum-core.js";
 
@@ -1904,6 +1906,8 @@
     }
 
     function updateAnalyzeAvailability() {
+      gainSlider.disabled = isGainLocked(lifecycleState, showAnalysis);
+      gainSlider.title = gainSlider.disabled ? "历史分析期间增益已锁定，返回实时频谱后可调整" : "";
       if (showAnalysis) {
         analyzeButton.disabled = false;
         analyzeButton.textContent = "返回实时频谱";
@@ -1981,6 +1985,7 @@
         ? nextLifecycleState(lifecycleState, "ANALYZE")
         : "analyzing";
       renderLifecycle();
+      updateAnalyzeAvailability();
       const previousSpectrum = getDisplayedSpectrum()
         ? new Float32Array(getDisplayedSpectrum())
         : null;
@@ -2614,7 +2619,9 @@
       }
       if (spectrum) spectrum.fill(MIN_DB);
       resetCustomMarker();
-      clearHistory("图表、历史和峰值保持已清空");
+      clearHistory("");
+      statusClearAt = 0;
+      statusLabel.style.display = "none";
       frequencyValue.textContent = "—";
       levelValue.textContent = "—";
     }
